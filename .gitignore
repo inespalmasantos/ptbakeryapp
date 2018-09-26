@@ -1,0 +1,4 @@
+*.pyc
+logo.png
+config.py
+/__pycache__

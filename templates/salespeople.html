@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Salespeople</h1>
+  <a class="btn btn-success" href="/add_salesperson">Add Salesperson</a>
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Name</th>
+      <th></th>
+    </tr>
+    {% for salesperson in salespeople|sort(attribute="name") %}
+      <tr>
+        <td>{{salesperson.name}}</td>
+        <td><a href="edit_salesperson/{{salesperson.id}}" class="btn btn-default pull-right">Edit</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  
+{% endblock %}

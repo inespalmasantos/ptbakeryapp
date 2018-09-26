@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <div class="container-fluid">
+  <h1>Products</h1>
+  <a class="btn btn-success" href="/add_product">Add Product</a>
+  <div class="table-container">
+  <table class="table table-striped">
+  <thead>
+    <tr>
+      <th class="align-middle word-wrap">Name</th>
+      <th class="align-middle word-wrap">Type</th>
+      <th class="align-middle word-wrap">Number of pieces per bag</th>
+      <th class="align-middle word-wrap">Aggregate to</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for product in products|sort(attribute="name") %}
+    <tr>
+      <td class="align-middle word-wrap">{{product.name}}</td>
+      <td class="align-middle word-wrap">{{product.product_type}}</td>
+      <td class="align-middle word-wrap">{{product.nr_pieces_per_bag}}</td>
+      <td class="align-middle word-wrap">{{product.aggregate_to}}</td>
+      <td><a href="edit_product/{{product.id}}" class="btn btn-default pull-right">Edit</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+{% endblock %}
+  <!-- <table class="table table-sm mt-3 table-striped table-bordered">
+    <thead>
+      <tr>
+        <th scope="col" class="td1 align-middle">Name</th>
+        <th scope="col" class="td1 align-middle text-center">Type</th>
+        <th scope="col" class="td1 align-middle text-center">Number of pieces per bag</th>
+        <th scope="col" class="td1 align-middle text-center">Aggregate to</th>
+        <th class="td1"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products|sort(attribute="name") %}
+      <tr>
+        <td class="td1 word-wrap align-middle">{{product.name}}</td>
+        <td class="td1 word-wrap align-middle text-center">{{product.product_type}}</td>
+        <td class="td1 word-wrap align-middle text-center">{{product.nr_pieces_per_bag}}</td>
+        <td class="td1 word-wrap align-middle text-center">{{product.aggregate_to}}</td>
+        <td class="td1 word-wrap align-middle text-center"><a href="edit_product/{{product.id}}" class="btn btn-default pull-right">Edit</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table> -->

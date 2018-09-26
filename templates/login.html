@@ -1,0 +1,19 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <div class="container-fluid login h-100 pt-5 w-100">
+    <img src="static/images/logo.png" class="mx-auto d-block w-25">
+    <!--<img class="mx-auto d-block h-25" src="{{url_for('static', filename='images/logo.png')}}" />-->
+    <form method="POST" class="mx-auto mx-auto pt-3 login-form" action="">
+  	  <div class="form-group">
+        <label>Username</label>
+  		  <input type="text" name="username" class="form-control" value={{request.form.username}}>
+  	  </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" class="form-control" value={{request.form.password}}>
+      </div>
+  	  <button type="submit" class="btn float-right">Submit</button>
+    </form>
+  </div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Edit Product</h1>
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form method="POST" action="">
+  	<div class="form-group">
+  		{{render_field(form.name, class_="form-control")}}
+  		{{render_field(form.product_type, class_="form-control")}}
+  		{{render_field(form.nr_pieces_per_bag, class_="form-control")}}
+      <div id = "aggregrate_to_field">
+        {{render_field(form.aggregate_to, class_="form-control")}}
+      </div>
+  	</div>
+  	<p><input type="submit" class="btn btn-primary" value="Submit"></p>
+  </form>
+{% endblock %}

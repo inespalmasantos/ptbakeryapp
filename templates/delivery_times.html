@@ -1,0 +1,20 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h1>Delivery Times</h1>
+  <a class="btn btn-success" href="/add_delivery_time">Add Delivery Time</a>
+  <hr>
+  <table class="table table-striped">
+    <tr>
+      <th>Time</th>
+      <th></th>
+    </tr>
+    {% for delivery_time in delivery_times %}
+      <tr>
+        <td>{{delivery_time.time}}</td>
+        <td><a href="edit_delivery_time/{{delivery_time.id}}" class="btn btn-default pull-right">Edit</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+  
+{% endblock %}

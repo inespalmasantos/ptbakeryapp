@@ -1,0 +1,74 @@
+* {
+	box-sizing: border-box;
+}
+
+.navbar img {
+	height: 75px;
+}
+.navbar {
+	border-bottom: 2px solid rgb(79, 47, 24);
+}
+.dash-img, .dash-img2 {
+	width: 85px;
+	height: 85px;
+	border-radius: 10px;
+}
+.line1 {
+	padding: 4rem 10rem 0 10rem;
+}
+.line2 {
+	padding: 0rem 15rem 0 15rem;
+}
+.dash-item {
+	text-decoration: none !important;
+}
+.button-color {
+	background-color: rgb(79, 47, 24);
+	color: rgb(179, 159, 135);
+}
+.svg-icon {
+	width: 20px;
+	height: 20px;
+}
+
+.bg-brown {
+	background-color: rgb(79, 47, 24);
+	fill: rgb(179, 159, 135);
+}
+
+.login-form {
+	width: 35%;
+}
+
+.icon-database:before {
+  content: "\e964";
+}
+
+.fill-black {
+	fill: black !important;
+}
+
+.row-one {
+	height: ;
+}
+
+thead, tbody {
+	display: block;
+}
+tbody {
+    height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.table-container {
+	min-width: 1000px;
+	border: 1px solid black;
+	overflow-x: auto;
+}
+
+table {
+	font-size: 12px;
+}
+td, th {
+	padding: 3px !important;
+}
