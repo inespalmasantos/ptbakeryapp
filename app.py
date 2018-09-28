@@ -2,7 +2,7 @@ from flask import Flask, render_template, flash, redirect, url_for, session, req
 #from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
-from passlib.hash import sha256_crypt
+#from passlib.hash import sha256_crypt
 from functools import wraps
 import json
 
@@ -82,7 +82,8 @@ def register():
 	form = RegisterForm(request.form)
 	if request.method == 'POST' and form.validate():
 		username = form.username.data
-		password = sha256_crypt.encrypt(str(form.password.data))
+		#password = sha256_crypt.encrypt(str(form.password.data))
+		password = form.password.data
 
 		# Create cursor
 		cur = mysql.connection.cursor()
@@ -121,7 +122,8 @@ def login():
 			password = data['password']
 
 			# Compare passwords
-			if sha256_crypt.verify(password_candidate, password):
+			#if sha256_crypt.verify(password_candidate, password):
+			if password_candidate == password:
 			    # Passed
 			    session['logged_in'] = True
 			    session['username'] = username
