@@ -20,24 +20,8 @@ mysql = MySQL(app)
 # Secret key
 app.config['SECRET_KEY']
 
-# Index
-@app.route('/')
-def index():
-	return render_template('login.html')
-
-
-# Register form class
-class RegisterForm(Form):
-	username = StringField('Username', [validators.Length(min=4, max=25)])
-	password = PasswordField('Password', [
-		validators.DataRequired(),
-		validators.EqualTo('confirm', message='Passwords do not match')
-	])
-	confirm = PasswordField('Confirm password')
-
-
 # User login
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/', methods=['GET', 'POST'])
 def login():
 	if request.method == 'POST':
 		# Get Form Fields
@@ -74,6 +58,16 @@ def login():
 			return render_template('login.html', error=error)
 
 	return render_template('login.html')
+
+# Register form class
+class RegisterForm(Form):
+	username = StringField('Username', [validators.Length(min=4, max=25)])
+	password = PasswordField('Password', [
+		validators.DataRequired(),
+		validators.EqualTo('confirm', message='Passwords do not match')
+	])
+	confirm = PasswordField('Confirm password')
+
 
 # Check if user is logged in
 def is_logged_in(f):
