@@ -13,33 +13,13 @@ $(document).ready(() => {
 	});
 	$('.btn').on('mouseenter', event => {
 		$(event.currentTarget).addClass('button-color');
+		$(event.target).children().addClass('color');
 	});
 	$('.btn').on('mouseleave', event => {
 		$(event.currentTarget).removeClass('button-color');
+		$(event.target).children().removeClass('color');
 	});
-
-	let tableTd = $('table tbody tr:first').children();
-	let tdWidth = tableTd.map(function() {
-		return $(this).width()
-	});
-	
-	let tableTh = $('table thead tr').children();
-	let thWidth = tableTh.map(function() {
-		return $(this).width()
-	});
-
-	$('table tbody tr:first').children().each(function(index) {
-		if(thWidth[index] >= tdWidth[index]){
-			$(this).css('width', thWidth[index]);
-		}
-	});
-
-	$('table thead tr').children().each(function(index) {
-		if(thWidth[index] < tdWidth[index]){
-			$(this).css('width', tdWidth[index]);
-		}
-	});
-})
+});
 
 //Give dynamic to add_product and edit_product views
 $(function() {

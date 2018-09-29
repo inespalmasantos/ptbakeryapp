@@ -1,17 +1,17 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <div class="container-fluid">
-  <h1>Products</h1>
-  <a class="btn btn-success" href="/add_product">Add Product</a>
+  <h3 class="float-left pt-1">Products</h3>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/dashboard">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_product">Add Product</a></button>
   <div class="table-container">
-  <table class="table table-striped">
+  <table class="table table-striped table-sm">
   <thead>
     <tr>
       <th class="align-middle word-wrap">Name</th>
-      <th class="align-middle word-wrap">Type</th>
-      <th class="align-middle word-wrap">Number of pieces per bag</th>
-      <th class="align-middle word-wrap">Aggregate to</th>
+      <th class="align-middle word-wrap text-center">Type</th>
+      <th class="align-middle word-wrap text-center">Number of pieces per bag</th>
+      <th class="align-middle word-wrap text-center">Aggregate to</th>
       <th></th>
     </tr>
   </thead>
@@ -19,10 +19,10 @@
     {% for product in products|sort(attribute="name") %}
     <tr>
       <td class="align-middle word-wrap">{{product.name}}</td>
-      <td class="align-middle word-wrap">{{product.product_type}}</td>
-      <td class="align-middle word-wrap">{{product.nr_pieces_per_bag}}</td>
-      <td class="align-middle word-wrap">{{product.aggregate_to}}</td>
-      <td><a href="edit_product/{{product.id}}" class="btn btn-default pull-right">Edit</td>
+      <td class="align-middle word-wrap text-center">{{product.product_type}}</td>
+      <td class="align-middle word-wrap text-center">{{product.nr_pieces_per_bag}}</td>
+      <td class="align-middle word-wrap text-center">{{product.aggregate_to}}</td>
+      <td><a href="edit_product/{{product.id}}">Edit</a></td>
     </tr>
     {% endfor %}
   </tbody>

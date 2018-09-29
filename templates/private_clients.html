@@ -1,9 +1,9 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Private Clients</h1>
-  <a class="btn btn-success" href="/add_private_client">Add Private Client</a>
-  <hr>
+  <h3 class="float-left pt-1">Private Clients</h3>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_private_client">Add Private Client</a></button>
   <!--<table class="table table-responsive table-sm w-100nd-block d-md-table table-fixed">-->
   <div class="table-container">
   <table class="table table-striped table-sm">
@@ -31,7 +31,7 @@
         <td class="word-wrap align-middle text-center">{{client.address}}</td>
         <td class="word-wrap align-middle text-center">{{client.door_code}}</td>
         <td class="word-wrap align-middle text-center">{{client.zone}}</td>
-        <td class="word-wrap align-middle text-center"><a href="edit_private_client/{{client.id}}" class="btn btn-default pull-right"></a></td>
+        <td class="word-wrap align-middle text-center"><a href="edit_private_client/{{client.id}}">Edit</a></td>
       </tr>
       {% endfor %}
     </tbody>

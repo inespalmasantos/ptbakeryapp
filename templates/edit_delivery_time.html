@@ -1,12 +1,13 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Edit Delivery Time</h1>
+  <h3>Edit Delivery Time</h3>
   {% from "includes/_formhelpers.html" import render_field %}
   <form method="POST" action="">
   	<div class="form-group">
-  		{{render_field(form.time, class_="form-control")}}
+  		{{render_field(form.time, class_="form-control form-control-sm")}}
   	</div>
-  	<p><input type="submit" class="btn btn-primary" value="Submit"></p>
+  	<button type="submit" class="btn float-right mb-2 pt-1 pb-1 pl-2 pr-2 float-right" value="Submit"><a>Add</a></button>
+  	<button class="btn float-right mr-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/delivery_times">Back</a></button>
   </form>
 {% endblock %}
