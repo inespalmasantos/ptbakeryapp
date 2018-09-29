@@ -59,16 +59,6 @@ def login():
 
 	return render_template('login.html')
 
-# Register form class
-class RegisterForm(Form):
-	username = StringField('Username', [validators.Length(min=4, max=25)])
-	password = PasswordField('Password', [
-		validators.DataRequired(),
-		validators.EqualTo('confirm', message='Passwords do not match')
-	])
-	confirm = PasswordField('Confirm password')
-
-
 # Check if user is logged in
 def is_logged_in(f):
 	@wraps(f)
@@ -87,6 +77,15 @@ def logout():
 	session.clear()
 	# flash('You are now logged out', 'success')
 	return redirect(url_for('login'))
+
+# Register form class
+class RegisterForm(Form):
+	username = StringField('Username', [validators.Length(min=4, max=25)])
+	password = PasswordField('Password', [
+		validators.DataRequired(),
+		validators.EqualTo('confirm', message='Passwords do not match')
+	])
+	confirm = PasswordField('Confirm password')
 
 # User register
 @app.route('/register', methods=['GET', 'POST'])
