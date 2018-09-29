@@ -1,12 +1,9 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
-#from data import Articles
 from flask_mysqldb import MySQL
 from wtforms import Form, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
 #from passlib.hash import sha256_crypt
 from functools import wraps
 import json
-
-##
 
 app = Flask(__name__)
 app.config.from_object('config')
@@ -26,48 +23,8 @@ app.config['SECRET_KEY']
 # Index
 @app.route('/')
 def index():
-	return render_template('home.html')
+	return render_template('login.html')
 
-# About
-@app.route('/about')
-def about():
-	return render_template('about.html')
-
-# Articles
-@app.route('/articles')
-def articles():
-	# Create cursor
-	cur = mysql.connection.cursor()
-
-	# Get Articles
-	result = cur.execute("SELECT * FROM articles")
-
-	articles = cur.fetchall()
-
-	if result > 0:
-		return render_template('articles.html', articles=articles)
-	else:
-		msg = 'No Articles Found'
-		return render_template('articles.html', msg=msg)
-
-	# Close connection
-	cur.close()
-
-# Single Article
-@app.route('/article/<string:id>/')
-def article(id):
-	# Create cursor
-	cur = mysql.connection.cursor()
-
-	# Get Article
-	result = cur.execute("SELECT * FROM articles WHERE id = %s", [id])
-
-	article = cur.fetchone()
-
-	return render_template('article.html', article=article)
-
-	# Close connection
-	cur.close()
 
 # Register form class
 class RegisterForm(Form):
@@ -78,31 +35,6 @@ class RegisterForm(Form):
 	])
 	confirm = PasswordField('Confirm password')
 
-# User register
-@app.route('/register', methods=['GET', 'POST'])
-def register():
-	form = RegisterForm(request.form)
-	if request.method == 'POST' and form.validate():
-		username = form.username.data
-		#password = sha256_crypt.encrypt(str(form.password.data))
-		password = form.password.data
-
-		# Create cursor
-		cur = mysql.connection.cursor()
-
-		# Execute query
-		cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
-
-		# Commit to DB
-		mysql.connection.commit()
-
-		# Close connection
-		cur.close()
-
-		flash('You are now registered and can log in', 'success' )
-
-		return redirect(url_for('index'))
-	return render_template('register.html', form=form)
 
 # User login
 @app.route('/login', methods=['GET', 'POST'])
@@ -162,26 +94,38 @@ def logout():
 	# flash('You are now logged out', 'success')
 	return redirect(url_for('login'))
 
+# User register
+@app.route('/register', methods=['GET', 'POST'])
+@is_logged_in
+def register():
+	form = RegisterForm(request.form)
+	if request.method == 'POST' and form.validate():
+		username = form.username.data
+		#password = sha256_crypt.encrypt(str(form.password.data))
+		password = form.password.data
+
+		# Create cursor
+		cur = mysql.connection.cursor()
+
+		# Execute query
+		cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
+
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('New user registered', 'success' )
+
+		return redirect(url_for('dashboard'))
+	return render_template('register.html', form=form)
+
 # Dashboard
 @app.route('/dashboard')
 @is_logged_in
 def dashboard():
-	# Create cursor
-	cur = mysql.connection.cursor()
-
-	# Get Articles
-	result = cur.execute("SELECT * FROM articles")
-
-	articles = cur.fetchall()
-
-	if result > 0:
-		return render_template('dashboard.html', articles=articles)
-	else:
-		msg = 'No Articles Found'
-		return render_template('dashboard.html', msg=msg)
-
-	# Close connection
-	cur.close()
+	return render_template('dashboard.html')
 
 # Clients
 @app.route('/clients')
