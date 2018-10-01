@@ -1,10 +1,10 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h1>Salespeople</h1>
-  <button class="btn float-right mt-2 mb-2"><a href="/add_private_client">Add Salesperson</a></button>
-  <button class="btn float-right mt-2 mb-2 mr-2"><a href="/dashboard">Back</a></button>
-  <div class="table-container">
+  <h3 class="float-left pt-1">Salespeople</h3>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_salesperson">Add Salesperson</a></button>
+  <div class="table-container2 pt-2">
   <table class="table table-striped">
     <tr>
       <th>Name</th>
@@ -13,7 +13,7 @@
     {% for salesperson in salespeople|sort(attribute="name") %}
       <tr>
         <td>{{salesperson.name}}</td>
-        <td><a href="edit_salesperson/{{salesperson.id}}" class="btn btn-default pull-right">Edit</a></td>
+        <td><a href="edit_salesperson/{{salesperson.id}}">Edit</a></td>
       </tr>
     {% endfor %}
   </table>
