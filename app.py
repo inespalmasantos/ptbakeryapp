@@ -41,7 +41,6 @@ def login():
 
 			# Compare passwords
 			if sha256_crypt.verify(password_candidate, password):
-			#if password_candidate == password:
 			    # Passed
 			    session['logged_in'] = True
 			    session['username'] = username
@@ -95,8 +94,7 @@ def register():
 	if request.method == 'POST' and form.validate():
 		username = form.username.data
 		password = sha256_crypt.encrypt(str(form.password.data))
-		#password = form.password.data
-
+		
 		# Create cursor
 		cur = mysql.connection.cursor()
 
