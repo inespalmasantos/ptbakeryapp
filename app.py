@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
+from wtforms import Form, DecimalField, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
 from passlib.hash import sha256_crypt
 from functools import wraps
 import json
@@ -650,6 +650,92 @@ def prices():
 
 	# Close connection
 	cur.close()
+
+# Price Form Class
+class PriceForm(Form):
+	product = StringField('Product', [validators.Length(min=1, max=100)])
+	client_type = SelectField('Client type', choices=[('Private', 'Private'), ('Retail', 'Retail')])
+	price_type = SelectField('Price type', choices=[('Standard', 'Standard'), ('Special', 'Special')])
+	client_name = StringField('Client name', [validators.Length(min=1, max=100)])
+	unit_price = DecimalField('Unit price', places=2, rounding=None)
+
+# Add Price
+@app.route('/add_price', methods=['GET', 'POST'])
+@is_logged_in
+def add_price():
+	form = PriceForm(request.form)
+	
+	if request.method == 'POST' and form.validate():
+		product = form.product.data
+		client_type = form.client_type.data
+		price_type = form.price_type.data
+		client_name = form.client_name.data
+		unit_price = form.unit_price.data
+
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute
+		cur.execute("INSERT INTO prices(product, client_type, price_type, client_name, unit_price) VALUES(%s, %s, %s, %s, %s)", (product, client_type, price_type, client_name, unit_price))
+
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Price Created', 'success')
+
+		return redirect(url_for('prices'))
+
+	return render_template('add_price.html', form=form)
+
+# Edit Price
+@app.route('/edit_price/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_price(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get price by id
+	result = cur.execute("SELECT * FROM prices WHERE id = %s", [id])
+	price = cur.fetchone()
+
+	# Get form 
+	form = PriceForm(request.form)
+	form.product.data = price['product']
+	form.client_type.data = price['client_type']
+	form.price_type.data = price['price_type']
+	form.client_name.data = price['client_name']
+	form.unit_price.data = price['unit_price']
+	
+    
+	if request.method == 'POST' and form.validate():
+		product = request.form['product']
+		client_type = request.form['client_type']
+		price_type = request.form['price_type']
+		client_name = request.form['client_name']
+		unit_price = request.form['unit_price']
+		
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute
+		cur.execute("UPDATE prices SET product=%s, client_type=%s, price_type=%s, client_name=%s, unit_price=%s WHERE id=%s", (product, client_type, price_type, client_name, unit_price, id))
+        		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Price Updated', 'success')
+
+		return redirect(url_for('prices'))
+		#print old_name
+	else:
+		print(form.errors)
+	return render_template('edit_price.html', form=form)
 
 
 # Salespeople

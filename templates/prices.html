@@ -17,7 +17,7 @@
     </tr>
   </thead>
   <tbody>
-    {% for price in prices|sort(attribute="name") %}
+    {% for price in prices|sort(attribute="product") %}
     <tr>
       <td class="align-middle word-wrap">{{price.product}}</td>
       <td class="align-middle word-wrap text-center">{{price.client_type}}</td>
