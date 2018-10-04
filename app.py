@@ -634,7 +634,23 @@ def edit_product(id):
 @app.route('/prices')
 @is_logged_in
 def prices():
-	return render_template('prices.html')
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get Prices
+	result = cur.execute("SELECT * FROM prices")
+
+	prices = cur.fetchall()
+
+	if result > 0:
+		return render_template('prices.html', prices=prices)
+	else:
+		msg = 'No Prices Found'
+		return render_template('prices.html', msg=msg)
+
+	# Close connection
+	cur.close()
+
 
 # Salespeople
 @app.route('/salespeople')
