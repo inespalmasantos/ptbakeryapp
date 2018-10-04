@@ -147,7 +147,7 @@ def private_clients():
 
 # Private Client Form Class
 class PrivateClientForm(Form):
-	name = StringField('Name', [validators.Length(min=1, max=30)])
+	name = StringField('Name', [validators.Length(min=1, max=100)])
 	payment_scheme = SelectField('Payment scheme', choices=[('Post delivery', 'Post delivery'), ('Prepayment', 'Prepayment')])
 	phone = StringField('Phone', [validators.Length(max=30)])
 	email = StringField('Email', [validators.Length(max=100)])
@@ -293,7 +293,7 @@ def get_salespeople():
 
 # Retail Client Form Class
 class RetailClientForm(Form):
-	name = StringField('Name', [validators.Length(min=1, max=30)])
+	name = StringField('Name', [validators.Length(min=1, max=100)])
 	retail_type = SelectField('Retail type', choices=[('Restaurant', 'Restaurant'), ('Supermarket', 'Supermarket')])
 	delivery_time = SelectField('Delivery time', choices=[])
 	payment_scheme = SelectField('Payment scheme', choices=[('CoD', 'CoD'), ('WB', 'WB'), ('MB', 'MB'), ('TBC', 'TBC')])
