@@ -53,14 +53,6 @@ $(document).ready(() => {
 			} else {
 				$('#client_name').hide();
 			}
-			/*$('#price_type').find('select').change(function() {
-				var valPriceType = $('#price_type').find(':selected').text();
-				if(valPriceType === 'Special') {
-					$('#client_name').show();
-				} else {
-					$('#client_name').hide();
-				}
-			})*/
 		}
 	});
 
@@ -73,14 +65,7 @@ $(document).ready(() => {
 				}
 	})
 
-	/*$('#price_type').find('select').change(function() {
-		var valPriceType = $('#price_type').find(':selected').text();
-		if(valPriceType === 'Special') {
-			$('#client_name').show();
-		} else {
-			$('#client_name').hide();
-		}
-	}*/ 
+	 
 });
 
 
@@ -109,58 +94,3 @@ $(function() {
 
 
 
-//Give dynamic to add_price and edit_price views
-/*$(function() {
-    var val = $("#client_type").val();
-    if(val == "Retail"){
-        $("#price_type").show();
-    }
-    else if (val == "Private"){
-      	$("#price_type").hide();
-    }
-*/
-    /*$("#name").attr("required", true);
-	*/   
-/*    $('#client_type').change(function() {
-    	var val = $(this).val();
-        if(val == "Retail"){
-            $("#price_type").show();
-        }
-        else if (val == "Private"){
-            $("#price_type").hide();
-        }
-    });
-});
-*/
-
-// Ajax code by Hacks Hand session - to be deleted - for future reference
-// $(function() {
-//     $("#aggregate_to").val("-");
-//     $("#aggregate_to").attr("disabled", true);
-//     $('#nr_pieces_per_bag').change(function() {
-//         var val = $(this).val();
-        
-//         if(val > 1){
-//             $("#aggregate_to").attr("disabled", false);
-//             $("#aggregate_to").val("");
-//             var data = {"number_pieces": val};
-//             data = JSON.stringify(data);
-//             $.ajax({
-//                 url: '/ajax/get/aggregrates',
-//                 data: data,
-//                 type: 'POST',
-//                 success: function(response) {
-//                     console.log(response);
-//                 },
-//                 error: function(error) {
-//                     console.log(error);
-//                 }
-//             });
-//         }
-//         else{
-//             $("#aggregate_to").val("-");
-//             $("#aggregate_to").attr("disabled", true);
-//         }
-    
-//     });
-// });
