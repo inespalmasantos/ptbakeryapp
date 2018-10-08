@@ -614,6 +614,7 @@ def edit_product(id):
 		result = cur.execute("SELECT * FROM products WHERE id = %s", [id])
 		product = cur.fetchone()
 		cur.execute("UPDATE products SET aggregate_to=%s WHERE aggregate_to=%s", (name, product['name']))
+		cur.execute("UPDATE prices SET product=%s WHERE product=%s", (name, product['name']))
 		cur.execute("UPDATE products SET name=%s, product_type=%s, nr_pieces_per_bag=%s, aggregate_to=%s WHERE id=%s", (name, product_type, nr_pieces_per_bag, aggregate_to, id))
         		
 		# Commit to DB
@@ -638,7 +639,7 @@ def prices():
 	cur = mysql.connection.cursor()
 
 	# Get Prices
-	result = cur.execute("SELECT * FROM prices")
+	result = cur.execute("SELECT * FROM prices ORDER BY product, client_type, price_type DESC, client_name")
 
 	prices = cur.fetchall()
 
@@ -651,12 +652,42 @@ def prices():
 	# Close connection
 	cur.close()
 
+# Create choices for product field
+# (for add_price and edit_price views)
+def get_product_names():
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get Products
+	result = cur.execute("SELECT name FROM products ORDER BY name")
+	products = cur.fetchall()
+	# Close connection
+	cur.close()
+	# Create choices for the aggregate_to SelectField
+	names = [(d["name"], d['name']) for d in products]
+	return names
+
+# Create choices for client_name field
+# (for add_price and edit_price views)
+def get_client_names():
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get Products
+	result = cur.execute("SELECT name FROM clients WHERE type = %s ORDER BY name", ['Retail'])
+	clients = cur.fetchall()
+	# Close connection
+	cur.close()
+	# Create choices for the aggregate_to SelectField
+	names = [(d["name"], d['name']) for d in clients]
+	return names
+
 # Price Form Class
 class PriceForm(Form):
-	product = StringField('Product', [validators.Length(min=1, max=100)])
+	#product = StringField('Product', [validators.Length(min=1, max=100)])
+	product = SelectField('Product', choices = [])
 	client_type = SelectField('Client type', choices=[('Private', 'Private'), ('Retail', 'Retail')])
 	price_type = SelectField('Price type', choices=[('Standard', 'Standard'), ('Special', 'Special')])
-	client_name = StringField('Client name', [validators.Length(min=1, max=100)])
+	#client_name = StringField('Client name', [validators.Length(min=1, max=100)])
+	client_name = SelectField('Client name', choices = [])
 	unit_price = DecimalField('Unit price', places=2, rounding=None)
 
 # Add Price
@@ -664,12 +695,24 @@ class PriceForm(Form):
 @is_logged_in
 def add_price():
 	form = PriceForm(request.form)
+	form.product.choices = get_product_names()
+	form.client_name.choices = get_client_names()
 	
 	if request.method == 'POST' and form.validate():
 		product = form.product.data
 		client_type = form.client_type.data
-		price_type = form.price_type.data
-		client_name = form.client_name.data
+		if client_type == 'Private':
+			price_type = 'Standard'
+			client_name = '-'
+		else:
+			price_type = form.price_type.data
+			if price_type == 'Standard':
+				client_name = '-'
+			else:
+				client_name = form.client_name.data
+ 		
+		#price_type = form.price_type.data
+		#client_name = form.client_name.data
 		unit_price = form.unit_price.data
 
 		# Create Cursor
@@ -703,19 +746,34 @@ def edit_price(id):
 
 	# Get form 
 	form = PriceForm(request.form)
+	form.product.choices = get_product_names()
+	form.client_name.choices = get_client_names()
 	form.product.data = price['product']
 	form.client_type.data = price['client_type']
-	form.price_type.data = price['price_type']
-	form.client_name.data = price['client_name']
+	if form.client_type.data == "Retail":
+	    form.price_type.data = price['price_type']
+	    if form.price_type.data == "Special":
+	        form.client_name.data = price['client_name']
 	form.unit_price.data = price['unit_price']
 	
     
 	if request.method == 'POST' and form.validate():
 		product = request.form['product']
 		client_type = request.form['client_type']
-		price_type = request.form['price_type']
-		client_name = request.form['client_name']
-		unit_price = request.form['unit_price']
+		#price_type = request.form['price_type']
+		#client_name = request.form['client_name']
+		if client_type == 'Private':
+			price_type = 'Standard'
+			client_name = '-'
+		else:
+			price_type = request.form['price_type']
+			if price_type == 'Standard':
+				client_name = '-'
+			else:
+				client_name = request.form['client_name']
+ 		unit_price = request.form['unit_price']
+
+
 		
 		# Create Cursor
 		cur = mysql.connection.cursor()

@@ -19,7 +19,70 @@ $(document).ready(() => {
 		$(event.currentTarget).removeClass('button-color');
 		$(event.target).children().removeClass('color');
 	});
+	
+	//Give dynamic behavior to Add Price and Edit Price Views
+	var clientType = $('#client_type').find(':selected').text();
+	var priceType = $('#price_type').find(':selected').text();
+	var clientName = $('#client_name').find(':selected').text();
+	console.log(clientType, priceType, clientName);
+
+	if(clientType === 'Retail') {
+		$('#price_type').show();
+		if(priceType === 'Standard') {
+			$('#client_name').hide();
+		} else if(priceType === 'Special') {
+			$('#client_name').show();
+		};
+	} else {
+		$('#price_type').hide();
+		$('#client_name').hide();
+	}
+
+	$('#client_type').find('select').change(function() {
+		var valClientType = $('#client_type').find(':selected').text();
+		var valClientName = $('#client_name').find(':selected').text();
+		var valPriceType = $('#price_type').find(':selected').text();
+		if(valClientType === 'Private') {
+			$('#price_type').hide();
+			$('#client_name').hide();
+		} else if(valClientType === 'Retail') {
+			$('#price_type').show();
+			var valPriceType = $('#price_type').find(':selected').text();
+			if(valPriceType === 'Special') {
+				$('#client_name').show();
+			} else {
+				$('#client_name').hide();
+			}
+			/*$('#price_type').find('select').change(function() {
+				var valPriceType = $('#price_type').find(':selected').text();
+				if(valPriceType === 'Special') {
+					$('#client_name').show();
+				} else {
+					$('#client_name').hide();
+				}
+			})*/
+		}
+	});
+
+	$('#price_type').find('select').change(function() {
+		var valPriceType = $('#price_type').find(':selected').text();
+				if(valPriceType === 'Special') {
+					$('#client_name').show();
+				} else {
+					$('#client_name').hide();
+				}
+	})
+
+	/*$('#price_type').find('select').change(function() {
+		var valPriceType = $('#price_type').find(':selected').text();
+		if(valPriceType === 'Special') {
+			$('#client_name').show();
+		} else {
+			$('#client_name').hide();
+		}
+	}*/ 
 });
+
 
 //Give dynamic to add_product and edit_product views
 $(function() {
@@ -45,6 +108,30 @@ $(function() {
 });
 
 
+
+//Give dynamic to add_price and edit_price views
+/*$(function() {
+    var val = $("#client_type").val();
+    if(val == "Retail"){
+        $("#price_type").show();
+    }
+    else if (val == "Private"){
+      	$("#price_type").hide();
+    }
+*/
+    /*$("#name").attr("required", true);
+	*/   
+/*    $('#client_type').change(function() {
+    	var val = $(this).val();
+        if(val == "Retail"){
+            $("#price_type").show();
+        }
+        else if (val == "Private"){
+            $("#price_type").hide();
+        }
+    });
+});
+*/
 
 // Ajax code by Hacks Hand session - to be deleted - for future reference
 // $(function() {
