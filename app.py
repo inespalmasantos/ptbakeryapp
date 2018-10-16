@@ -1,8 +1,9 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, DecimalField, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
+from wtforms import Form, DateField, DecimalField, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
 from passlib.hash import sha256_crypt
 from functools import wraps
+#from datetime import datetime
 import json
 
 app = Flask(__name__)
@@ -896,6 +897,143 @@ def edit_salesperson(id):
 @is_logged_in
 def invoices():
 	return render_template('invoices.html')
+
+# Invoices Private Clients
+@app.route('/invoices_private_clients')
+@is_logged_in
+def invoices_private_clients():
+	return render_template('invoices_private_clients.html')
+
+# Manage Invoices Private Clients
+@app.route('/manage_invoices_private_clients')
+@is_logged_in
+def manage_invoices_private_clients():
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get Invoices
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE clients.type = 'Private'")
+
+	invoices = cur.fetchall()
+
+	if result > 0:
+		return render_template('manage_invoices_private_clients.html', invoices=invoices)
+	else:
+		msg = 'No Invoices Found'
+		return render_template('manage_invoices_private_clients.html', msg=msg)
+
+	# Close connection
+	cur.close()
+
+# Private Client Invoice Form Class
+class PrivateClientInvoiceForm(Form):
+	invoice_id = IntegerField('Invoice #')
+	client_id = IntegerField('Client id')
+	client_n = StringField('Client name')
+	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
+	total_amount = DecimalField('Total amount', places=2, rounding=None)
+	payment_status = SelectField('Payment status', choices=[('Not paid', 'Not paid'), ('Paid', 'Paid')])
+	payment_date = DateField('Payment date', format='%Y-%m-%d')
+	payment_method = SelectField('Payment method', choices=[('Bank transfer', 'Bank transfer'), ('Cash', 'Cash')])
+	payment_details = StringField('Payment details', [validators.Length(max=255)])
+	other_info = StringField('Other info', [validators.Length(max=255)])
+	
+# Edit Private Client Invoice
+@app.route('/edit_invoice_private_client/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_invoice_private_client(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get price by id
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE invoices.id = %s", [id])
+	invoice = cur.fetchone()
+
+	# Get form 
+	form = PrivateClientInvoiceForm(request.form)
+	form.invoice_id.data = invoice['id']
+	form.client_id.data = invoice['client_id']
+	form.client_n.data = invoice['name']
+	form.delivery_day.data = invoice['delivery_day']
+	form.total_amount.data = invoice['total_amount']
+	form.payment_status.data = invoice['payment_status']
+	if form.payment_status.data == 'Paid':
+		form.payment_date.data = invoice['payment_date']
+		form.payment_method.data = invoice['payment_method']
+		form.payment_details.data = invoice['payment_details']
+	else:
+		form.payment_date.data = invoice['payment_date']
+		form.payment_method.data = 'Bank transfer'
+		form.payment_details.data = ''
+	form.other_info.data = invoice['other_info']
+	
+    
+	if request.method == 'POST' and form.validate():
+		delivery_day = request.form['delivery_day']
+		payment_status = request.form['payment_status']
+		if payment_status == 'Paid':
+			payment_date = request.form['payment_date']
+			payment_method = request.form['payment_method']
+			payment_details = request.form['payment_details']
+		else:
+			#Ficticious payment_date to avoid eliminating the form.validate() function
+			payment_date = '2000-01-01'
+			payment_method = ''
+			payment_details = ''
+		
+		other_info = request.form['other_info']
+
+		
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute
+		cur.execute("UPDATE invoices SET delivery_day=%s, payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, other_info=%s WHERE id=%s", (delivery_day, payment_status, payment_date, payment_method, payment_details, other_info, id))
+        		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Invoice Updated', 'success')
+
+		return redirect(url_for('manage_invoices_private_clients'))
+		
+	else:
+		print(form.errors)
+	return render_template('edit_invoice_private_client.html', form=form)
+
+
+# Convert Invoices to PDF Private Clients
+@app.route('/convert_invoices_pdf_private_clients')
+@is_logged_in
+def convert_invoices_pdf_private_clients():
+	return render_template('convert_invoices_pdf_private_clients.html')
+
+# Invoices Retail Clients
+@app.route('/invoices_retail_clients')
+@is_logged_in
+def invoices_retail_clients():
+	return render_template('invoices_Retail_clients.html')
+
+# Manage Invoices Retail Clients
+@app.route('/manage_invoices_retail_clients')
+@is_logged_in
+def manage_invoices_retail_clients():
+	return render_template('manage_invoices_retail_clients.html')
+
+# Generate Invoices of the Day Retail Clients
+@app.route('/generate_invoices_day_retail_clients')
+@is_logged_in
+def generate_invoices_day_retail_clients():
+	return render_template('generate_invoices_day_retail_clients.html')
+
+# Convert Invoices to PDF Retail Clients
+@app.route('/convert_invoices_pdf_retail_clients')
+@is_logged_in
+def convert_invoices_pdf_retail_clients():
+	return render_template('convert_invoices_pdf_retail_clients.html')
 
 # Statements & Receipts
 @app.route('/statements_receipts')

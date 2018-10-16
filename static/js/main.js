@@ -24,7 +24,7 @@ $(document).ready(() => {
 	var clientType = $('#client_type').find(':selected').text();
 	var priceType = $('#price_type').find(':selected').text();
 	var clientName = $('#client_name').find(':selected').text();
-	console.log(clientType, priceType, clientName);
+	/*console.log(clientType, priceType, clientName);*/
 
 	if(clientType === 'Retail') {
 		$('#price_type').show();
@@ -64,6 +64,34 @@ $(document).ready(() => {
 					$('#client_name').hide();
 				}
 	})
+
+	//Give dynamic behavior to Edit Invoice Private Client View
+	var paymentStatus = $('#payment_status').find(':selected').text();
+	/*console.log(paymentStatus);*/
+
+	if(paymentStatus === 'Paid') {
+		$('#payment_date').show();
+		$('#payment_method').show();
+		$('#payment_details').show();
+	} else {
+		$('#payment_date').hide();
+		$('#payment_method').hide();
+		$('#payment_details').hide();
+	}
+
+	$('#payment_status').find('select').change(function() {
+		var valPaymentStatus = $('#payment_status').find(':selected').text();
+		if(valPaymentStatus === 'Paid') {
+		    $('#payment_date').show();
+		    $('#payment_method').show();
+		    $('#payment_details').show();
+	    } else {
+		    $('#payment_date').hide();
+		    $('#payment_method').hide();
+		    $('#payment_details').hide();
+	    }
+	});
+
 
 	 
 });
