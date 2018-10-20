@@ -1,6 +1,6 @@
 from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
 from flask_mysqldb import MySQL
-from wtforms import Form, DateField, DecimalField, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
+from wtforms import Form, DateField, DecimalField, FormField, FieldList, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
 from passlib.hash import sha256_crypt
 from functools import wraps
 #from datetime import datetime
@@ -1003,6 +1003,85 @@ def edit_invoice_private_client(id):
 	else:
 		print(form.errors)
 	return render_template('edit_invoice_private_client.html', form=form)
+
+# Create choices for client_id field
+# (for add_invoice view)
+def get_client_ids():
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get Products
+	result = cur.execute("SELECT * FROM clients WHERE type = %s ORDER BY id", ['Private'])
+	clients = cur.fetchall()
+	# Close connection
+	cur.close()
+	# Create choices for the aggregate_to SelectField
+	ids_names = [(d["id"], str(d['id']) + ' / ' + d['name']) for d in clients]
+	#ids_names = [(d["id"], d['id']) for d in clients]
+	
+	return ids_names
+
+# Ordered Items Form Class
+class OrderedItemsForm(Form):
+	product = SelectField('', choices = [])
+	quantity = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
+	unit_price = DecimalField('', places=2, rounding=None)
+	amount = DecimalField('', places=2, rounding=None)
+	
+
+# Private Client Add Invoice Form Class
+class PrivateClientAddInvoiceForm(Form):
+	client_id = SelectField('Client id / Client name', choices = [], coerce=int)
+	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
+	total_amount = DecimalField('Total amount', places=2, rounding=None)
+	items = FieldList(FormField(OrderedItemsForm), min_entries=20, max_entries=20)
+	
+
+# Add Invoices Private Clients
+@app.route('/add_invoice_private_clients', methods=['GET', 'POST'])
+@is_logged_in
+def add_invoice_private_clients():
+	form = PrivateClientAddInvoiceForm(request.form)
+	form.client_id.choices = get_client_ids()
+	for sub_form in form.items:
+		sub_form.product.choices = get_product_names()
+	
+	#if request.method == 'POST' and form.validate():
+	if request.method == 'POST' and form.validate():
+		client_id = form.client_id.data
+		delivery_day = form.delivery_day.data
+		total_amount = form.total_amount.data
+				
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute and insert into the database general invoice data
+		cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
+		
+		# Get the invoice id of the new invoice
+		result = cur.execute("SELECT * FROM invoices ORDER BY id DESC LIMIT 1;")
+		current_invoice = cur.fetchone()
+		
+		# Insert into the database ordered items data
+		for sub_form in form.items:
+			product = sub_form.product.data
+			quantity = sub_form.quantity.data
+			unit_price = sub_form.unit_price.data
+			
+			cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) VALUES(%s, %s, %s, %s)", (current_invoice['id'], product, quantity, unit_price))
+
+
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Invoice Created', 'success')
+
+		return redirect(url_for('manage_invoices_private_clients'))
+
+	return render_template('add_invoice_private_clients.html', form=form)
+
 
 
 # Convert Invoices to PDF Private Clients
