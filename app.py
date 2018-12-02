@@ -1,4 +1,4 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, logging
+from flask import Flask, render_template, flash, redirect, url_for, session, request, logging, jsonify
 from flask_mysqldb import MySQL
 from wtforms import Form, DateField, DecimalField, FormField, FieldList, StringField, SelectField, IntegerField, TextAreaField, PasswordField, validators, ValidationError
 from passlib.hash import sha256_crypt
@@ -1033,7 +1033,11 @@ class PrivateClientAddInvoiceForm(Form):
 	client_id = SelectField('Client id / Client name', choices = [], coerce=int)
 	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
 	total_amount = DecimalField('Total amount', places=2, rounding=None)
-	items = FieldList(FormField(OrderedItemsForm), min_entries=20, max_entries=20)
+	items = FieldList(FormField(OrderedItemsForm), min_entries=5, max_entries=5)
+	product_one = SelectField('', choices = [])
+	quantity_one = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
+	unit_price_one = DecimalField('', places=2, rounding=None)
+	amount_one = DecimalField('', places=2, rounding=None)
 	
 
 # Add Invoices Private Clients
@@ -1042,32 +1046,52 @@ class PrivateClientAddInvoiceForm(Form):
 def add_invoice_private_clients():
 	form = PrivateClientAddInvoiceForm(request.form)
 	form.client_id.choices = get_client_ids()
+	form.product_one.choices = get_product_names()
 	for sub_form in form.items:
 		sub_form.product.choices = get_product_names()
 	
 	#if request.method == 'POST' and form.validate():
-	if request.method == 'POST' and form.validate():
+	if request.method == 'POST':
 		client_id = form.client_id.data
 		delivery_day = form.delivery_day.data
 		total_amount = form.total_amount.data
-				
+		product_one = 'Bread'
+		quantity_one = 20
+		#unit_price_one = 5
+		#product_one = form.product_one.data
+		#quantity_one = form.quantity_one.data
+		unit_price_one = request.json.get('price', 0)
+
 		# Create Cursor
 		cur = mysql.connection.cursor()
 
-		# Execute and insert into the database general invoice data
-		cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
-		
 		# Get the invoice id of the new invoice
 		result = cur.execute("SELECT * FROM invoices ORDER BY id DESC LIMIT 1;")
 		current_invoice = cur.fetchone()
+
+		# Insert data on the ordered_items table
+		cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, %s, %s, %s)", (current_invoice['id'], product_one, quantity_one, unit_price_one))
+				
+		# # Execute and insert into the database general invoice data
+		# cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
 		
-		# Insert into the database ordered items data
-		for sub_form in form.items:
-			product = sub_form.product.data
-			quantity = sub_form.quantity.data
-			unit_price = sub_form.unit_price.data
+		# Execute and insert into the database general invoice data
+		#cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
+		
+
+		# # Get the invoice id of the new invoice
+		# result = cur.execute("SELECT * FROM invoices ORDER BY id DESC LIMIT 1;")
+		# current_invoice = cur.fetchone()
+		
+		
+
+		# # Insert into the database ordered items data
+		# for sub_form in form.items:
+		# 	product = sub_form.product.data
+		# 	quantity = sub_form.quantity.data
+		# 	unit_price = sub_form.unit_price.data
 			
-			cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) VALUES(%s, %s, %s, %s)", (current_invoice['id'], product, quantity, unit_price))
+		# 	cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) VALUES(%s, %s, %s, %s)", (current_invoice['id'], product, quantity, unit_price))
 
 
 		# Commit to DB
@@ -1078,11 +1102,31 @@ def add_invoice_private_clients():
 
 		flash('Invoice Created', 'success')
 
-		return redirect(url_for('manage_invoices_private_clients'))
+		#return redirect(url_for('manage_invoices_private_clients'))
+
+		return jsonify({
+            'message': 'success'
+        })
 
 	return render_template('add_invoice_private_clients.html', form=form)
 
-
+# Update Unite Price on Add Invoice View
+@app.route('/get_unit_price', methods=['GET'])
+@is_logged_in
+def get_unit_price():
+	prod = request.args.get('product')
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get unit price
+	result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = 'Private'", [prod])
+	selected_price = cur.fetchone()
+	# Close connection
+	cur.close()
+	price = (selected_price['unit_price'])
+	#form = PrivateClientAddInvoiceForm(request.form)
+	#form.unit_price_one.data = price
+	#return render_template('add_invoice_private_client.html', form=form)
+	return str(price)
 
 # Convert Invoices to PDF Private Clients
 @app.route('/convert_invoices_pdf_private_clients')
@@ -1097,10 +1141,20 @@ def invoices_retail_clients():
 	return render_template('invoices_Retail_clients.html')
 
 # Manage Invoices Retail Clients
-@app.route('/manage_invoices_retail_clients')
+@app.route('/manage_invoices_retail_clients', methods=['GET', 'POST'])
 @is_logged_in
 def manage_invoices_retail_clients():
 	return render_template('manage_invoices_retail_clients.html')
+
+# Testing
+@app.route('/testing', methods=['GET', 'POST'])
+@is_logged_in
+def testing():
+	prod = request.args.get('product')
+	#return render_template('invoices_Retail_clients.html')
+	return str(prod)
+
+
 
 # Generate Invoices of the Day Retail Clients
 @app.route('/generate_invoices_day_retail_clients')

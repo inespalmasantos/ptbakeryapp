@@ -91,9 +91,84 @@ $(document).ready(() => {
 		    $('#payment_details').hide();
 	    }
 	});
+	
+    //Add lines to Add Invoice View
+	var invoiceTableRows = $('#invoice-body tr');
+
+	for(var rowNumber = 1; rowNumber <= invoiceTableRows.length; rowNumber++) {
+		$('#invoice-row' + rowNumber).hide();
+	}
+
+	var invoiceRowNumber = 1;
+
+	$('.button-invoice').on('click', function() {
+		console.log(invoiceRowNumber)
+		$('#invoice-row' + invoiceRowNumber).show();
+		if(invoiceRowNumber < 20) {
+			$('#add' + (invoiceRowNumber - 1)).hide();
+		}
+		invoiceRowNumber++;
+		console.log(invoiceRowNumber);		
+	})
+	
+	//Set unit_price and amount for default product at Add Invoice View
+	var valProductOne = $('#product_one').find(':selected').text();
+	var valQuantityOne = $('#quantity_one').find(':selected').text();
+	$.ajax({
+			type: 'GET',
+			url: '/get_unit_price',
+			data: {'product': valProductOne},
+			dataType: 'json',
+			success: function(response) {
+				
+				$('#unit_price_one').html(response.toFixed(2));
+				$('#amount_one').html((response*valQuantityOne).toFixed(2));
+			}
+	})
+
+	//Give dynamic behavior unit_prices and amounts when product is changed at Add Invoice View
+	$('#product_one').find('select').change(function() {
+		var valProductOne = $('#product_one').find(':selected').text();
+		var valQuantityOne = $('#quantity_one').find(':selected').text();
+		$.ajax({
+			type: 'GET',
+			url: '/get_unit_price',
+			data: {'product': valProductOne},
+			dataType: 'json',
+			success: function(response) {
+				
+				$('#unit_price_one').html(response.toFixed(2));
+				$('#amount_one').html((response*valQuantityOne).toFixed(2));
+				
+			}
+		})
+	});
+
+	//Give dynamic behavior to amounts when unit_price is changed at Add Invoice View
+	$('#quantity_one').find('select').change(function() {
+		var valUnitPriceOne = $('#unit_price_one').html();
+		var valQuantityOne = $('#quantity_one').find(':selected').text();
+		$('#amount_one').html((valUnitPriceOne*valQuantityOne).toFixed(2));	
+	});
 
 
-	 
+	//Testing
+	$('#submit_add_invoice').on('click', event => {
+		var valUnitPriceOne = $('#unit_price_one').html();
+		$.ajax({
+			type: 'POST',
+            url: '/add_invoice_private_clients',
+            data : JSON.stringify({
+                price: valUnitPriceOne
+            }),
+            dataType: 'json',
+            contentType: 'application/json',
+            success: function (data) {
+                console.log(data);
+                window.location = '/manage_invoices_private_clients';
+            },
+        })
+	});
 });
 
 
