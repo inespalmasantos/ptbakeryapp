@@ -6,7 +6,6 @@ import config
 app = Flask(__name__)
 app.config.from_object(config)
 
-# init MYSQL
 mysql = MySQL(app)
 db = SQLAlchemy(app)
 

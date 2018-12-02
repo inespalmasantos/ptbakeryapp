@@ -1,47 +1,8 @@
-from flask import render_template, flash, redirect, url_for, session, request, logging, jsonify
-from forms import *
-from passlib.hash import sha256_crypt
+from flask import render_template, flash, redirect, url_for, session, request, jsonify
 from functools import wraps
 from app import app, mysql
-
-
-# User login
-@app.route('/', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        # Get Form Fields
-        username = request.form['username']
-        password_candidate = request.form['password']
-
-        # Create cursor
-        cur = mysql.connection.cursor()
-
-        # Get user by username
-        result = cur.execute("SELECT * FROM users WHERE username = %s", [username])
-
-        if result > 0:
-            # Get stored hash
-            data = cur.fetchone()
-            password = data['password']
-
-            # Compare passwords
-            if sha256_crypt.verify(password_candidate, password):
-                # Passed
-                session['logged_in'] = True
-                session['username'] = username
-
-                # flash('You are now logged in', 'success')
-                return redirect(url_for('dashboard'))
-            else:
-                error = 'Invalid login'
-                return render_template('login.html', error=error)
-            # Close connection
-            cur.close()
-        else:
-            error = 'Username not found'
-            return render_template('login.html', error=error)
-
-    return render_template('login.html')
+from models import Users, Clients
+from forms import *
 
 
 # Check if user is logged in
@@ -57,6 +18,42 @@ def is_logged_in(f):
     return wrap
 
 
+# User register
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegisterForm()
+    if request.method == 'POST' and form.validate_on_submit():
+        try:
+            Users.create_new(form.username.data, form.password.data)
+            flash('New user registered', 'success')
+            return redirect(url_for('login'))
+        except Exception as error:
+            flash(error, 'danger')
+    return render_template('register.html', form=form)
+
+
+# User login
+@app.route('/', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    error = None
+    if request.method == 'POST' and form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user is not None:
+            if user.is_authorized(form.password.data):
+                # Passed
+                session['logged_in'] = True
+                session['username'] = user.username
+
+                # flash('You are now logged in', 'success')
+                return redirect(url_for('dashboard'))
+            else:
+                error = 'Invalid credentials'
+        else:
+            error = 'Username not found'
+    return render_template('login.html', form=form, error=error)
+
+
 # Logout
 @app.route('/logout')
 @is_logged_in
@@ -64,43 +61,6 @@ def logout():
     session.clear()
     # flash('You are now logged out', 'success')
     return redirect(url_for('login'))
-
-
-# Register form class
-class RegisterForm(Form):
-    username = StringField('Username', [validators.Length(min=4, max=25)])
-    password = PasswordField('Password', [
-        validators.DataRequired(),
-        validators.EqualTo('confirm', message='Passwords do not match')
-    ])
-    confirm = PasswordField('Confirm password')
-
-
-# User register
-@app.route('/register', methods=['GET', 'POST'])
-@is_logged_in
-def register():
-    form = RegisterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        username = form.username.data
-        password = sha256_crypt.encrypt(str(form.password.data))
-
-        # Create cursor
-        cur = mysql.connection.cursor()
-
-        # Execute query
-        cur.execute("INSERT INTO users(username, password) VALUES(%s, %s)", (username, password))
-
-        # Commit to DB
-        mysql.connection.commit()
-
-        # Close connection
-        cur.close()
-
-        flash('New user registered', 'success')
-
-        return redirect(url_for('dashboard'))
-    return render_template('register.html', form=form)
 
 
 # Dashboard
@@ -113,7 +73,7 @@ def dashboard():
 # Clients
 @app.route('/clients')
 @is_logged_in
-def clients():
+def client_view():
     return render_template('clients.html')
 
 
@@ -121,124 +81,30 @@ def clients():
 @app.route('/private_clients')
 @is_logged_in
 def private_clients():
-    # Create cursor
-    cur = mysql.connection.cursor()
-
-    # Get Private Clients
-    result = cur.execute("SELECT * FROM clients WHERE type = 'private'")
-
-    clients = cur.fetchall()
-
-    if result > 0:
+    clients = Clients.query.all()
+    if len(clients) > 0:
         return render_template('private_clients.html', clients=clients)
     else:
         msg = 'No Clients Found'
         return render_template('private_clients.html', msg=msg)
 
-    # Close connection
-    cur.close()
-
-
-# Private Client Form Class
-class PrivateClientForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=100)])
-    payment_scheme = SelectField('Payment scheme',
-                                 choices=[('Post delivery', 'Post delivery'), ('Prepayment', 'Prepayment')])
-    phone = StringField('Phone', [validators.Length(max=30)])
-    email = StringField('Email', [validators.Length(max=100)])
-    address = StringField('Address', [validators.Length(min=1, max=255)])
-    door_code = StringField('Door code', [validators.Length(max=100)])
-    zone = SelectField('Zone',
-                       choices=[('Macau', 'Macau'), ('Taipa', 'Taipa'), ('Coloane', 'Coloane'), ('Cotai', 'Cotai')])
-
-
-# Add Private Client
-@app.route('/add_private_client', methods=['GET', 'POST'])
-@is_logged_in
-def add_private_client():
-    form = PrivateClientForm(request.form)
-
-    if request.method == 'POST' and form.validate():
-        name = form.name.data
-        payment_scheme = form.payment_scheme.data
-        phone = form.phone.data
-        email = form.email.data
-        address = form.address.data
-        door_code = form.door_code.data
-        zone = form.zone.data
-
-        # Create Cursor
-        cur = mysql.connection.cursor()
-
-        # Execute
-        cur.execute(
-            "INSERT INTO clients(name, type, payment_scheme, phone_one, email_one, address, door_code, zone) VALUES(%s, 'private', %s, %s, %s, %s, %s, %s)",
-            (name, payment_scheme, phone, email, address, door_code, zone))
-
-        # Commit to DB
-        mysql.connection.commit()
-
-        # Close connection
-        cur.close()
-
-        flash('Client Created', 'success')
-
-        return redirect(url_for('private_clients'))
-
-    return render_template('add_private_client.html', form=form)
-
 
 # Edit Private Client
-@app.route('/edit_private_client/<string:id>', methods=['GET', 'POST'])
+@app.route('/private_client', methods=['GET', 'POST'])
+@app.route('/private_client/<string:client_id>', methods=['GET', 'POST'])
 @is_logged_in
-def edit_private_client(id):
-    # Create Cursor
-    cur = mysql.connection.cursor()
-
-    # Get private client by id
-    result = cur.execute("SELECT * FROM clients WHERE id = %s", [id])
-
-    client = cur.fetchone()
-
-    # Get form
-    form = PrivateClientForm(request.form)
-    form.name.data = client['name']
-    form.payment_scheme.data = client['payment_scheme']
-    form.phone.data = client['phone_one']
-    form.email.data = client['email_one']
-    form.address.data = client['address']
-    form.door_code.data = client['door_code']
-    form.zone.data = client['zone']
-
-    if request.method == 'POST' and form.validate():
-        name = request.form['name']
-        payment_scheme = request.form['payment_scheme']
-        phone = request.form['phone']
-        email = request.form['email']
-        address = request.form['address']
-        door_code = request.form['door_code']
-        zone = request.form['zone']
-
-        # Create Cursor
-        cur = mysql.connection.cursor()
-
-        # Execute
-        cur.execute(
-            "UPDATE clients SET name=%s, payment_scheme=%s, phone_one=%s, email_one=%s, address=%s, door_code=%s, zone=%s WHERE id=%s",
-            (name, payment_scheme, phone, email, address, door_code, zone, id))
-
-        # Commit to DB
-        mysql.connection.commit()
-
-        # Close connection
-        cur.close()
-
+def edit_private_client(client_id=None):
+    client = Clients.query.get(client_id) if client_id is not None else Clients()
+    form = PrivateClientForm(obj=client)
+    if request.method == 'POST' and form.validate_on_submit():
+        form.populate_obj(client)
+        client.save()
         flash('Client Updated', 'success')
-
         return redirect(url_for('private_clients'))
     else:
-        print(form.errors)
-    return render_template('edit_private_client.html', form=form)
+        pass
+    return render_template('private_client.html',
+                           title='Add private client' if client_id is None else 'Edit private client', form=form)
 
 
 # Retail Clients
@@ -291,23 +157,6 @@ def get_salespeople():
     # Create choices for the aggregate_to SelectField
     salespeople = [(d['name'], d['name']) for d in names]
     return salespeople
-
-
-# Retail Client Form Class
-class RetailClientForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=100)])
-    retail_type = SelectField('Retail type', choices=[('Restaurant', 'Restaurant'), ('Supermarket', 'Supermarket')])
-    delivery_time = SelectField('Delivery time', choices=[])
-    payment_scheme = SelectField('Payment scheme', choices=[('CoD', 'CoD'), ('WB', 'WB'), ('MB', 'MB'), ('TBC', 'TBC')])
-    statement_delivery_method = SelectField('Statement delivery method',
-                                            choices=[('By email', 'By email'), ('By wechat', 'By wechat'),
-                                                     ('By hand', 'By hand'), ('Not applicable', 'Not applicable')])
-    contact_person = StringField('Contact person', [validators.Length(max=100)])
-    phone_one = StringField('Phone', [validators.Length(max=30)])
-    email_one = StringField('Email', [validators.Length(max=100)])
-    wechat_id = StringField('Wechat id', [validators.Length(max=100)])
-    salesperson = SelectField('Salesperson', choices=[])
-    other_info = StringField('Other info', [validators.Length(max=255)])
 
 
 # Add Retail Client
@@ -439,16 +288,11 @@ def delivery_times():
     cur.close()
 
 
-# Delivery Time Form Class
-class Delivery_timeForm(Form):
-    time = StringField('Time', [validators.Length(min=1, max=20)])
-
-
 # Add Delivery Time
 @app.route('/add_delivery_time', methods=['GET', 'POST'])
 @is_logged_in
 def add_delivery_time():
-    form = Delivery_timeForm(request.form)
+    form = DeliveryTimeForm(request.form)
     if request.method == 'POST' and form.validate():
         time = form.time.data
 
@@ -484,7 +328,7 @@ def edit_delivery_time(id):
     delivery_time = cur.fetchone()
 
     # Get form
-    form = Delivery_timeForm(request.form)
+    form = DeliveryTimeForm(request.form)
 
     # Populate delivery time form fields
     form.time.data = delivery_time['time']
@@ -549,14 +393,6 @@ def get_names():
     # Create choices for the aggregate_to SelectField
     names = [(d["name"], d['name']) for d in products]
     return names
-
-
-# Product Form Class
-class ProductForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=50)])
-    product_type = SelectField('Type', choices=[('Bakery', 'Bakery'), ('Pastry', 'Pastry')])
-    nr_pieces_per_bag = SelectField('Number of pieces per bag', choices=[(x, x) for x in range(1, 41)], coerce=int)
-    aggregate_to = SelectField('Aggregate to', choices=[])
 
 
 # Add Product
@@ -702,17 +538,6 @@ def get_client_names():
     return names
 
 
-# Price Form Class
-class PriceForm(Form):
-    # product = StringField('Product', [validators.Length(min=1, max=100)])
-    product = SelectField('Product', choices=[])
-    client_type = SelectField('Client type', choices=[('Private', 'Private'), ('Retail', 'Retail')])
-    price_type = SelectField('Price type', choices=[('Standard', 'Standard'), ('Special', 'Special')])
-    # client_name = StringField('Client name', [validators.Length(min=1, max=100)])
-    client_name = SelectField('Client name', choices=[])
-    unit_price = DecimalField('Unit price', places=2, rounding=None)
-
-
 # Add Price
 @app.route('/add_price', methods=['GET', 'POST'])
 @is_logged_in
@@ -843,11 +668,6 @@ def salespeople():
     cur.close()
 
 
-# Salesperson Form Class
-class SalespersonForm(Form):
-    name = StringField('Name', [validators.Length(min=1, max=30)])
-
-
 # Add Salesperson
 @app.route('/add_salesperson', methods=['GET', 'POST'])
 @is_logged_in
@@ -955,20 +775,6 @@ def manage_invoices_private_clients():
     cur.close()
 
 
-# Private Client Invoice Form Class
-class PrivateClientInvoiceForm(Form):
-    invoice_id = IntegerField('Invoice #')
-    client_id = IntegerField('Client id')
-    client_n = StringField('Client name')
-    delivery_day = DateField('Delivery day', format='%Y-%m-%d')
-    total_amount = DecimalField('Total amount', places=2, rounding=None)
-    payment_status = SelectField('Payment status', choices=[('Not paid', 'Not paid'), ('Paid', 'Paid')])
-    payment_date = DateField('Payment date', format='%Y-%m-%d')
-    payment_method = SelectField('Payment method', choices=[('Bank transfer', 'Bank transfer'), ('Cash', 'Cash')])
-    payment_details = StringField('Payment details', [validators.Length(max=255)])
-    other_info = StringField('Other info', [validators.Length(max=255)])
-
-
 # Edit Private Client Invoice
 @app.route('/edit_invoice_private_client/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
@@ -1054,26 +860,6 @@ def get_client_ids():
     return ids_names
 
 
-# Ordered Items Form Class
-class OrderedItemsForm(Form):
-    product = SelectField('', choices=[])
-    quantity = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
-    unit_price = DecimalField('', places=2, rounding=None)
-    amount = DecimalField('', places=2, rounding=None)
-
-
-# Private Client Add Invoice Form Class
-class PrivateClientAddInvoiceForm(Form):
-    client_id = SelectField('Client id / Client name', choices=[], coerce=int)
-    delivery_day = DateField('Delivery day', format='%Y-%m-%d')
-    total_amount = DecimalField('Total amount', places=2, rounding=None)
-    items = FieldList(FormField(OrderedItemsForm), min_entries=5, max_entries=5)
-    product_one = SelectField('', choices=[])
-    quantity_one = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
-    unit_price_one = DecimalField('', places=2, rounding=None)
-    amount_one = DecimalField('', places=2, rounding=None)
-
-
 # Add Invoices Private Clients
 @app.route('/add_invoice_private_clients', methods=['GET', 'POST'])
 @is_logged_in
@@ -1084,17 +870,14 @@ def add_invoice_private_clients():
     for sub_form in form.items:
         sub_form.product.choices = get_product_names()
 
-    # if request.method == 'POST' and form.validate():
     if request.method == 'POST':
-        client_id = request.json.get('client_id', 0)
+        print request.form
+        client_id = request.json.get('client_id')
         delivery_day = form.delivery_day.data
         total_amount = form.total_amount.data
-        product_one = 'Bread'
-        quantity_one = 20
-        # unit_price_one = 5
-        # product_one = form.product_one.data
-        # quantity_one = form.quantity_one.data
         unit_price_one = request.json.get('price', 0)
+
+        # unit_price_one = request.args.get('price')
 
         # Create Cursor
         cur = mysql.connection.cursor()
@@ -1105,13 +888,10 @@ def add_invoice_private_clients():
 
         # Insert data on the ordered_items table
         cur.execute(
-            "INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, %s, %s, %s)",
-            (current_invoice['id'], product_one, quantity_one, unit_price_one))
+            "INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, 'pao', 5, %s)",
+            (current_invoice['id'], unit_price_one))
 
         # # Execute and insert into the database general invoice data
-        # cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
-
-        # Execute and insert into the database general invoice data
         # cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client_id, delivery_day, total_amount))
 
         # # Get the invoice id of the new invoice
@@ -1134,10 +914,8 @@ def add_invoice_private_clients():
 
         flash('Invoice Created', 'success')
 
-        # return redirect(url_for('manage_invoices_private_clients'))
-
         return jsonify({
-            'message': 'success'
+            "message": "success"
         })
 
     return render_template('add_invoice_private_clients.html', form=form)
@@ -1148,18 +926,24 @@ def add_invoice_private_clients():
 @is_logged_in
 def get_unit_price():
     prod = request.args.get('product')
-    # Create cursor
-    cur = mysql.connection.cursor()
-    # Get unit price
-    result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = 'Private'", [prod])
-    selected_price = cur.fetchone()
-    # Close connection
-    cur.close()
-    price = (selected_price['unit_price'])
-    # form = PrivateClientAddInvoiceForm(request.form)
-    # form.unit_price_one.data = price
-    # return render_template('add_invoice_private_client.html', form=form)
-    return str(price)
+    if prod is not None or prod is not '':
+        # Create cursor
+        cur = mysql.connection.cursor()
+        # Get unit price
+        result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = 'Private'", [prod])
+        selected_price = cur.fetchone()
+        # Close connection
+        if selected_price is not None:
+            price = selected_price.get('unit_price', 0)
+        else:
+            price = 0
+        # form = PrivateClientAddInvoiceForm(request.form)
+        # form.unit_price_one.data = price
+        # return render_template('add_invoice_private_client.html', form=form)
+        cur.close()
+        return str(price)
+    else:
+        return ''
 
 
 # Convert Invoices to PDF Private Clients
@@ -1173,7 +957,7 @@ def convert_invoices_pdf_private_clients():
 @app.route('/invoices_retail_clients')
 @is_logged_in
 def invoices_retail_clients():
-    return render_template('invoices_Retail_clients.html')
+    return render_template('invoices_retail_clients.html')
 
 
 # Manage Invoices Retail Clients
@@ -1232,7 +1016,3 @@ def drivers_info():
 @is_logged_in
 def data_backup():
     return render_template('data_backup.html')
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
