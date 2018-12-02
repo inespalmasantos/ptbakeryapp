@@ -1,4 +1,19 @@
-$(document).ready(() => {
+$(document).ready(function () {
+    $.fn.serializeObject = function() {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
 	$('.dash-img').on('mouseenter', event => {
 		$(event.currentTarget).removeClass('bg-light').addClass('bg-brown');
 	});
@@ -153,14 +168,15 @@ $(document).ready(() => {
 
 
 	//Testing
-	$('#submit_add_invoice').on('click', event => {
-		var valUnitPriceOne = $('#unit_price_one').html();
-		$.ajax({
-			type: 'POST',
+	  $('#add-invoice-form').submit(function () {
+        var valUnitPriceOne = $('#unit_price_one').html();
+        var formData = $(this).serializeObject();
+        formData.price = valUnitPriceOne;
+
+        $.ajax({
+            type: 'POST',
             url: '/add_invoice_private_clients',
-            data : JSON.stringify({
-                price: valUnitPriceOne
-            }),
+            data: JSON.stringify(formData),
             dataType: 'json',
             contentType: 'application/json',
             success: function (data) {
@@ -168,7 +184,7 @@ $(document).ready(() => {
                 window.location = '/manage_invoices_private_clients';
             },
         })
-	});
+    });
 });
 
 

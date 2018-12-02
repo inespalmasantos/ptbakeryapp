@@ -1,4 +1,3 @@
 *.pyc
-logo.png
-config.py
-/__pycache__
+venv
+.idea
