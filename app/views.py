@@ -1,17 +1,8 @@
-from flask import Flask, render_template, flash, redirect, url_for, session, request, logging, jsonify
-from flask_mysqldb import MySQL
-from wtforms import Form, DateField, DecimalField, FormField, FieldList, StringField, SelectField, IntegerField, \
-    TextAreaField, PasswordField, validators, ValidationError
+from flask import render_template, flash, redirect, url_for, session, request, logging, jsonify
+from forms import *
 from passlib.hash import sha256_crypt
 from functools import wraps
-# from datetime import datetime
-import json
-
-app = Flask(__name__)
-app.config.from_object('config')
-
-# init MYSQL
-mysql = MySQL(app)
+from app import app, mysql
 
 
 # User login
