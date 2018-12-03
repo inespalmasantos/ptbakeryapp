@@ -1,6 +1,6 @@
 <nav class="navbar navbar-expand-sm bg-light navbar-light p-0">
   <div class="container">
-    <a class="navbar-brand" href="#"><img src="/static/images/logo.png" style="height: 50px;"></a>
+    <a class="navbar-brand" href="#"><img src="{{ url_for('static', filename='images/logo.png') }}" style="height: 50px;"></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -9,13 +9,11 @@
       <ul class="navbar-nav ml-auto">
         {% if current_user.is_authenticated %}
           <li class="nav-item">
-            <a class="nav-link" href="/dashboard">Dashboard</a>
+            <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="/logout">Logout</a>
+            <a class="nav-link" href="{{ url_for('auth.logout') }}">Logout</a>
           </li>
-        {% else %}
-          
         {% endif %}
       </ul>
     </div>

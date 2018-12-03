@@ -1,32 +1,32 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h3 class="float-left pt-1">Prices</h3>
-  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/dashboard">Back</a></button>
-  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_price">Add Price</a></button>
-  <div class="table-container">
-  <table class="table table-striped table-sm">
-  <thead>
-    <tr>
-      <th class="align-middle word-wrap">Product</th>
-      <th class="align-middle word-wrap text-center">Client type</th>
-      <th class="align-middle word-wrap text-center">Price type</th>
-      <th class="align-middle word-wrap text-center">Client name</th>
-      <th class="align-middle word-wrap text-center">Unit price</th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for price in prices|sort(attribute="product") %}
-    <tr>
-      <td class="align-middle word-wrap">{{price.product}}</td>
-      <td class="align-middle word-wrap text-center">{{price.client_type}}</td>
-      <td class="align-middle word-wrap text-center">{{price.price_type}}</td>
-      <td class="align-middle word-wrap text-center">{{price.client_name}}</td>
-      <td class="align-middle word-wrap text-center">{{price.unit_price}}</td>
-      <td><a href="edit_price/{{price.id}}">Edit</a></td>
-    </tr>
-    {% endfor %}
-  </tbody>
-  </table>
+    <h3 class="float-left pt-1">Prices</h3>
+    <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/dashboard">Back</a></button>
+    <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_price">Add Price</a></button>
+    <div class="table-container">
+    <table class="table table-striped table-sm">
+        <thead>
+        <tr>
+            <th class="align-middle word-wrap">Product</th>
+            <th class="align-middle word-wrap text-center">Client type</th>
+            <th class="align-middle word-wrap text-center">Price type</th>
+            <th class="align-middle word-wrap text-center">Client name</th>
+            <th class="align-middle word-wrap text-center">Unit price</th>
+            <th></th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for price in prices|sort(attribute="product") %}
+            <tr>
+                <td class="align-middle word-wrap">{{ price.product }}</td>
+                <td class="align-middle word-wrap text-center">{{ price.client_type }}</td>
+                <td class="align-middle word-wrap text-center">{{ price.price_type }}</td>
+                <td class="align-middle word-wrap text-center">{{ price.client_name }}</td>
+                <td class="align-middle word-wrap text-center">{{ price.unit_price }}</td>
+                <td><a href="edit_price/{{ price.id }}">Edit</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

@@ -1,47 +1,49 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h3 class="float-left pt-1">Retail Clients</h3>
-  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
-  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_retail_client">Add Retail Client</a></button>
-  <!--<table class="table table-responsive table-sm w-100nd-block d-md-table table-fixed">-->
-  <div class="table-container">
-  <table class="table table-striped table-sm table-responsive">
-    <thead>
-      <tr>
-        <th scope="col" class="align-middle">Name</th>
-        <th scope="col" class="align-middle text-center">Retail type</th>
-        <th scope="col" class="align-middle text-center">Delivery time</th>
-        <th scope="col" class="align-middle text-center">Payment scheme</th>
-        <th scope="col" class="align-middle text-center">Statement delivery method</th>
-        <th scope="col" class="align-middle text-center">Contact person</th>
-        <th scope="col" class="align-middle text-center">Phone</th>
-        <th scope="col" class="align-middle text-center">Email</th>
-        <th scope="col" class="align-middle text-center">Wechat id</th>
-        <th scope="col" class="align-middle text-center">Salesperson</th>
-        <th scope="col" class="align-middle text-center">Other info</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for client in clients|sort(attribute="name") %}
-      <tr class="row-one">
-        <td class="word-wrap align-middle">{{client.name}}</td>
-        <td class="word-wrap align-middle text-center">{{client.retail_type}}</td>
-        <td class="word-wrap align-middle text-center">{{client.delivery_time}}</td>
-        <td class="word-wrap align-middle text-center">{{client.payment_scheme}}</td>
-        <td class="word-wrap align-middle text-center">{{client.statement_delivery_method}}</td>
-        <td class="word-wrap align-middle text-center">{{client.contact_person}}</td>
-        <td class="word-wrap align-middle text-center">{{client.phone_one}}</td>
-        <td class="word-wrap align-middle text-center">{{client.email_one}}</td>
-        <td class="word-wrap align-middle text-center">{{client.wechat_id}}</td>
-        <td class="word-wrap align-middle text-center">{{client.salesperson}}</td>
-        <td class="word-wrap align-middle text-center">{{client.other_info}}</td>
-        <td class="word-wrap align-middle text-center"><a href="edit_retail_client/{{client.id}}">Edit</a></td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-  </div>
-  
+    <h3 class="float-left pt-1">Retail Clients</h3>
+    <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
+    <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_retail_client">Add Retail
+        Client</a></button>
+    <!--<table class="table table-responsive table-sm w-100nd-block d-md-table table-fixed">-->
+    <div class="table-container">
+        <table class="table table-striped table-sm table-responsive">
+            <thead>
+            <tr>
+                <th scope="col" class="align-middle">Name</th>
+                <th scope="col" class="align-middle text-center">Retail type</th>
+                <th scope="col" class="align-middle text-center">Delivery time</th>
+                <th scope="col" class="align-middle text-center">Payment scheme</th>
+                <th scope="col" class="align-middle text-center">Statement delivery method</th>
+                <th scope="col" class="align-middle text-center">Contact person</th>
+                <th scope="col" class="align-middle text-center">Phone</th>
+                <th scope="col" class="align-middle text-center">Email</th>
+                <th scope="col" class="align-middle text-center">Wechat id</th>
+                <th scope="col" class="align-middle text-center">Salesperson</th>
+                <th scope="col" class="align-middle text-center">Other info</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for client in clients|sort(attribute="name") %}
+                <tr class="row-one">
+                    <td class="word-wrap align-middle">{{ client.name }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.retail_type }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.delivery_time }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.payment_scheme }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.statement_delivery_method }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.contact_person }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.phone_one }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.email_one }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.wechat_id }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.salesperson }}</td>
+                    <td class="word-wrap align-middle text-center">{{ client.other_info }}</td>
+                    <td class="word-wrap align-middle text-center"><a href="edit_retail_client/{{ client.id }}">Edit</a>
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
 {% endblock %}

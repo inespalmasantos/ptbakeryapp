@@ -1,22 +1,23 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h3 class="float-left pt-1">Salespeople</h3>
-  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
-  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_salesperson">Add Salesperson</a></button>
-  <div class="table-container2 pt-2">
-  <table class="table table-striped">
-    <tr>
-      <th>Name</th>
-      <th></th>
-    </tr>
-    {% for salesperson in salespeople|sort(attribute="name") %}
-      <tr>
-        <td>{{salesperson.name}}</td>
-        <td><a href="edit_salesperson/{{salesperson.id}}">Edit</a></td>
-      </tr>
-    {% endfor %}
-  </table>
-  </div>
-  
+    <h3 class="float-left pt-1">Salespeople</h3>
+    <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
+    <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_salesperson">Add Salesperson</a>
+    </button>
+    <div class="table-container2 pt-2">
+        <table class="table table-striped">
+            <tr>
+                <th>Name</th>
+                <th></th>
+            </tr>
+            {% for salesperson in salespeople|sort(attribute="name") %}
+                <tr>
+                    <td>{{ salesperson.name }}</td>
+                    <td><a href="edit_salesperson/{{ salesperson.id }}">Edit</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
 {% endblock %}

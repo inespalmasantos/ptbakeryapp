@@ -1,20 +1,20 @@
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
     <meta charset="utf-8">
     <title>PtBakeryApp</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css">
     <!--jquery script added by Joao - it makes the short navbar work-->
     <link rel="stylesheet" href="/static/stylesheet.css" type="text/css">
-  </head>
-  <body>
-    {% include 'includes/_navbar.html' %}
-    <div class="container section pt-4">
-      {% include 'includes/_messages.html' %}
-      {% block body %}{% endblock %}
-    </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-    <script src='/static/js/main.js'></script>
-  </body>
+</head>
+<body>
+{% include 'includes/_navbar.html' %}
+<div class="container section pt-4">
+    {% include 'includes/_messages.html' %}
+    {% block body %}{% endblock %}
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+<script src='/static/js/main.js'></script>
+</body>
 </html>

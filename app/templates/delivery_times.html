@@ -1,22 +1,23 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h3 class="float-left pt-1">Delivery Times</h3>
-  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
-  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_delivery_time">Add Delivery Time</a></button>
-  <div class="table-container2 pt-2">
-  <table class="table table-striped">
-    <tr>
-      <th>Time</th>
-      <th></th>
-    </tr>
-    {% for delivery_time in delivery_times %}
-      <tr>
-        <td>{{delivery_time.time}}</td>
-        <td><a href="edit_delivery_time/{{delivery_time.id}}">Edit</a></td>
-      </tr>
-    {% endfor %}
-  </table>
-  </div>
-  
+    <h3 class="float-left pt-1">Delivery Times</h3>
+    <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/clients">Back</a></button>
+    <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_delivery_time">Add Delivery
+        Time</a></button>
+    <div class="table-container2 pt-2">
+        <table class="table table-striped">
+            <tr>
+                <th>Time</th>
+                <th></th>
+            </tr>
+            {% for delivery_time in delivery_times %}
+                <tr>
+                    <td>{{ delivery_time.time }}</td>
+                    <td><a href="edit_delivery_time/{{ delivery_time.id }}">Edit</a></td>
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
 {% endblock %}
