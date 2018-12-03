@@ -1,5 +1,7 @@
 import os
 
+DEBUG = os.environ.get('DEBUG', False)
+DEBUG_TB_INTERCEPT_REDIRECTS = False
 MYSQL_HOST = 'localhost'
 MYSQL_USER = os.environ.get('MYSQL_USER', 'root')
 MYSQL_PASSWORD = os.environ.get('MYSQL_PASSWORD', 'q')

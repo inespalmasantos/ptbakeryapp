@@ -1,5 +1,5 @@
-from flask import render_template, flash, redirect, url_for, session, request, jsonify
-from flask_login import login_required, login_user, logout_user
+from flask import render_template, flash, redirect, url_for, request, jsonify
+from flask_login import login_required, login_user, logout_user, current_user
 from app import app, mysql, login_manager
 from models import Users, Clients
 from forms import *
@@ -27,6 +27,8 @@ def register():
 # User login
 @app.route('/', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(request.args.get('next') or url_for('dashboard'))
     form = LoginForm()
     if form.validate_on_submit():
         user = Users.get_by_username(form.username.data)
