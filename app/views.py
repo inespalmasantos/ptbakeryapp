@@ -1,21 +1,13 @@
 from flask import render_template, flash, redirect, url_for, session, request, jsonify
-from functools import wraps
-from app import app, mysql
+from flask_login import login_required, login_user, logout_user
+from app import app, mysql, login_manager
 from models import Users, Clients
 from forms import *
 
 
-# Check if user is logged in
-def is_logged_in(f):
-    @wraps(f)
-    def wrap(*args, **kwargs):
-        if 'logged_in' in session:
-            return f(*args, **kwargs)
-        else:
-            flash('Unauthorized, Please login', 'danger')
-            return redirect(url_for('login'))
-
-    return wrap
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.get_by_id(user_id)
 
 
 # User register
@@ -36,50 +28,42 @@ def register():
 @app.route('/', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-    error = None
-    if request.method == 'POST' and form.validate_on_submit():
-        user = Users.query.filter_by(username=form.username.data).first()
-        if user is not None:
-            if user.is_authorized(form.password.data):
-                # Passed
-                session['logged_in'] = True
-                session['username'] = user.username
-
-                # flash('You are now logged in', 'success')
-                return redirect(url_for('dashboard'))
-            else:
-                error = 'Invalid credentials'
-        else:
-            error = 'Username not found'
-    return render_template('login.html', form=form, error=error)
+    if form.validate_on_submit():
+        user = Users.get_by_username(form.username.data)
+        if user is not None and user.check_password(form.password.data):
+            login_user(user, form.remember_me.data)
+            flash('Logged in successfully as {}'.format(user.username), 'success')
+            return redirect(request.args.get('next') or url_for('dashboard'))
+        flash('Incorrect username or password', 'danger')
+    return render_template('login.html', form=form)
 
 
 # Logout
 @app.route('/logout')
-@is_logged_in
+@login_required
 def logout():
-    session.clear()
-    # flash('You are now logged out', 'success')
+    logout_user()
+    flash('You are now logged out', 'success')
     return redirect(url_for('login'))
 
 
 # Dashboard
 @app.route('/dashboard')
-@is_logged_in
+@login_required
 def dashboard():
     return render_template('dashboard.html')
 
 
 # Clients
 @app.route('/clients')
-@is_logged_in
+@login_required
 def client_view():
     return render_template('clients.html')
 
 
 # Private Clients
 @app.route('/private_clients')
-@is_logged_in
+@login_required
 def private_clients():
     clients = Clients.query.all()
     if len(clients) > 0:
@@ -92,7 +76,7 @@ def private_clients():
 # Edit Private Client
 @app.route('/private_client', methods=['GET', 'POST'])
 @app.route('/private_client/<string:client_id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_private_client(client_id=None):
     client = Clients.query.get(client_id) if client_id is not None else Clients()
     form = PrivateClientForm(obj=client)
@@ -109,7 +93,7 @@ def edit_private_client(client_id=None):
 
 # Retail Clients
 @app.route('/retail_clients')
-@is_logged_in
+@login_required
 def retail_clients():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -161,7 +145,7 @@ def get_salespeople():
 
 # Add Retail Client
 @app.route('/add_retail_client', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_retail_client():
     form = RetailClientForm(request.form)
     form.delivery_time.choices = get_delivery_times()
@@ -204,7 +188,7 @@ def add_retail_client():
 
 # Edit Retail Client
 @app.route('/edit_retail_client/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_retail_client(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -268,7 +252,7 @@ def edit_retail_client(id):
 
 # Delivery Times
 @app.route('/delivery_times')
-@is_logged_in
+@login_required
 def delivery_times():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -290,7 +274,7 @@ def delivery_times():
 
 # Add Delivery Time
 @app.route('/add_delivery_time', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_delivery_time():
     form = DeliveryTimeForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -317,7 +301,7 @@ def add_delivery_time():
 
 # Edit Delivery Time
 @app.route('/edit_delivery_time/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_delivery_time(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -360,7 +344,7 @@ def edit_delivery_time(id):
 
 # Products
 @app.route('/products')
-@is_logged_in
+@login_required
 def products():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -397,7 +381,7 @@ def get_names():
 
 # Add Product
 @app.route('/add_product', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_product():
     form = ProductForm(request.form)
     form.aggregate_to.choices = get_names()
@@ -433,7 +417,7 @@ def add_product():
 
 # Edit Product
 @app.route('/edit_product/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_product(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -488,7 +472,7 @@ def edit_product(id):
 
 # Prices
 @app.route('/prices')
-@is_logged_in
+@login_required
 def prices():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -540,7 +524,7 @@ def get_client_names():
 
 # Add Price
 @app.route('/add_price', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_price():
     form = PriceForm(request.form)
     form.product.choices = get_product_names()
@@ -586,7 +570,7 @@ def add_price():
 
 # Edit Price
 @app.route('/edit_price/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_price(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -648,7 +632,7 @@ def edit_price(id):
 
 # Salespeople
 @app.route('/salespeople')
-@is_logged_in
+@login_required
 def salespeople():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -670,7 +654,7 @@ def salespeople():
 
 # Add Salesperson
 @app.route('/add_salesperson', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_salesperson():
     form = SalespersonForm(request.form)
     if request.method == 'POST' and form.validate():
@@ -697,7 +681,7 @@ def add_salesperson():
 
 # Edit Salesperson
 @app.route('/edit_salesperson/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_salesperson(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -740,21 +724,21 @@ def edit_salesperson(id):
 
 # Invoices
 @app.route('/invoices')
-@is_logged_in
+@login_required
 def invoices():
     return render_template('invoices.html')
 
 
 # Invoices Private Clients
 @app.route('/invoices_private_clients')
-@is_logged_in
+@login_required
 def invoices_private_clients():
     return render_template('invoices_private_clients.html')
 
 
 # Manage Invoices Private Clients
 @app.route('/manage_invoices_private_clients')
-@is_logged_in
+@login_required
 def manage_invoices_private_clients():
     # Create cursor
     cur = mysql.connection.cursor()
@@ -777,7 +761,7 @@ def manage_invoices_private_clients():
 
 # Edit Private Client Invoice
 @app.route('/edit_invoice_private_client/<string:id>', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def edit_invoice_private_client(id):
     # Create Cursor
     cur = mysql.connection.cursor()
@@ -862,7 +846,7 @@ def get_client_ids():
 
 # Add Invoices Private Clients
 @app.route('/add_invoice_private_clients', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def add_invoice_private_clients():
     form = PrivateClientAddInvoiceForm(request.form)
     form.client_id.choices = get_client_ids()
@@ -923,7 +907,7 @@ def add_invoice_private_clients():
 
 # Update Unite Price on Add Invoice View
 @app.route('/get_unit_price', methods=['GET'])
-@is_logged_in
+@login_required
 def get_unit_price():
     prod = request.args.get('product')
     if prod is not None or prod is not '':
@@ -948,28 +932,28 @@ def get_unit_price():
 
 # Convert Invoices to PDF Private Clients
 @app.route('/convert_invoices_pdf_private_clients')
-@is_logged_in
+@login_required
 def convert_invoices_pdf_private_clients():
     return render_template('convert_invoices_pdf_private_clients.html')
 
 
 # Invoices Retail Clients
 @app.route('/invoices_retail_clients')
-@is_logged_in
+@login_required
 def invoices_retail_clients():
     return render_template('invoices_retail_clients.html')
 
 
 # Manage Invoices Retail Clients
 @app.route('/manage_invoices_retail_clients', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def manage_invoices_retail_clients():
     return render_template('manage_invoices_retail_clients.html')
 
 
 # Testing
 @app.route('/testing', methods=['GET', 'POST'])
-@is_logged_in
+@login_required
 def testing():
     prod = request.args.get('product')
     # return render_template('invoices_Retail_clients.html')
@@ -978,41 +962,41 @@ def testing():
 
 # Generate Invoices of the Day Retail Clients
 @app.route('/generate_invoices_day_retail_clients')
-@is_logged_in
+@login_required
 def generate_invoices_day_retail_clients():
     return render_template('generate_invoices_day_retail_clients.html')
 
 
 # Convert Invoices to PDF Retail Clients
 @app.route('/convert_invoices_pdf_retail_clients')
-@is_logged_in
+@login_required
 def convert_invoices_pdf_retail_clients():
     return render_template('convert_invoices_pdf_retail_clients.html')
 
 
 # Statements & Receipts
 @app.route('/statements_receipts')
-@is_logged_in
+@login_required
 def statements_receipts():
     return render_template('statements_receipts.html')
 
 
 # Bakery & Pastry Reports
 @app.route('/bakery_pastry_reports')
-@is_logged_in
+@login_required
 def bakery_pastry_reports():
     return render_template('bakery_pastry_reports.html')
 
 
 # Divers Info
 @app.route('/drivers_info')
-@is_logged_in
+@login_required
 def drivers_info():
     return render_template('drivers_info.html')
 
 
 # Data Backup
 @app.route('/data_backup')
-@is_logged_in
+@login_required
 def data_backup():
     return render_template('data_backup.html')

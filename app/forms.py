@@ -1,12 +1,13 @@
 from flask_wtf import FlaskForm
 from wtforms import Form, DateField, DecimalField, FormField, FieldList,\
     StringField, SelectField, IntegerField, PasswordField, SubmitField,\
-    validators
+    BooleanField, validators
 
 
 class LoginForm(FlaskForm):
     username = StringField('Username')
     password = PasswordField('Password', [validators.DataRequired()])
+    remember_me = BooleanField('Remember Me')
     submit = SubmitField('Sign In')
 
 
