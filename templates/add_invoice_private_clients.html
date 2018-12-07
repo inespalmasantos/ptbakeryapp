@@ -3,7 +3,7 @@
 {% block body %}
   <h3>Add Invoice <small>Private Client</small></h3>
   {% from "includes/_formhelpers.html" import render_field %}
-  <form method="POST" action="">
+  <form id='add_invoice_form'>
     <div class="form-group">
       {{render_field(form.client_id, class_="form-control form-control-sm")}}
       {{render_field(form.delivery_day, class_="form-control form-control-sm")}}
@@ -21,11 +21,20 @@
         <tbody id='invoice-body'>
           <tr>
             <td id='product_one' class="align-middle word-wrap">{{render_field(form.product_one)}}</td>
-            <td id='quantity_one'class="align-middle word-wrap text-center">{{render_field(form.quantity_one)}}</td>
+            <td id='quantity_one' class="align-middle word-wrap text-center">{{render_field(form.quantity_one)}}</td>
             <td id='unit_price_one' class="align-middle word-wrap text-center"></td>
             <td id='amount_one' class="align-middle word-wrap text-center"></td>
             <td></td>
           </tr>
+          {% for sub_form in form.items %}
+          <tr id="invoice-row{{loop.index0}}">
+            <td id="product{{loop.index0}}" class="align-middle word-wrap">{{render_field(sub_form.product)}}</td>
+            <td id="quantity{{loop.index0}}" class="align-middle word-wrap text-center">{{render_field(sub_form.quantity)}}</td>
+            <td id="unit_price{{loop.index0}}" class="align-middle word-wrap text-center"></td>
+            <td id="amount{{loop.index0}}" class="align-middle word-wrap text-center"></td>
+            <td><a class='button-invoice'><img id="add{{loop.index0}}" src="static/images/invoices/add.png"></a></td>
+          </tr>
+          {% endfor %}
           <!-- {% for sub_form in form.items %}
           <tr id="invoice-row{{loop.index0}}">
             <td class="align-middle word-wrap">{{render_field(sub_form.product)}}</td>
@@ -38,7 +47,7 @@
         </tbody>
       </table>
     </div>
-    <button id="submit_add_invoice" type="button" class="btn float-right mb-2 pt-1 pb-1 pl-2 pr-2 float-right" value="Submit"><a>Submit</a></button>
+    <button type="submit" class="btn float-right mb-2 pt-1 pb-1 pl-2 pr-2 float-right" value="Submit"><a>Submit</a></button>
     <button class="btn float-right mr-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/manage_invoices_private_clients">Back</a></button>
   </form>
 {% endblock %}

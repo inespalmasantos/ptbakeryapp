@@ -1,4 +1,22 @@
 $(document).ready(() => {
+		
+	//Read the form information
+	$.fn.serializeObject = function() {
+        var o = {};
+        var a = this.serializeArray();
+        $.each(a, function() {
+            if (o[this.name]) {
+                if (!o[this.name].push) {
+                    o[this.name] = [o[this.name]];
+                }
+                o[this.name].push(this.value || '');
+            } else {
+                o[this.name] = this.value || '';
+            }
+        });
+        return o;
+    };
+
 	$('.dash-img').on('mouseenter', event => {
 		$(event.currentTarget).removeClass('bg-light').addClass('bg-brown');
 	});
@@ -92,7 +110,7 @@ $(document).ready(() => {
 	    }
 	});
 	
-    //Add lines to Add Invoice View
+    /*//Add lines to Add Invoice View
 	var invoiceTableRows = $('#invoice-body tr');
 
 	for(var rowNumber = 1; rowNumber <= invoiceTableRows.length; rowNumber++) {
@@ -109,7 +127,7 @@ $(document).ready(() => {
 		}
 		invoiceRowNumber++;
 		console.log(invoiceRowNumber);		
-	})
+	})*/
 	
 	//Set unit_price and amount for default product at Add Invoice View
 	var valProductOne = $('#product_one').find(':selected').text();
@@ -126,6 +144,7 @@ $(document).ready(() => {
 			}
 	})
 
+	
 	//Give dynamic behavior unit_prices and amounts when product is changed at Add Invoice View
 	$('#product_one').find('select').change(function() {
 		var valProductOne = $('#product_one').find(':selected').text();
@@ -143,8 +162,9 @@ $(document).ready(() => {
 			}
 		})
 	});
-
-	//Give dynamic behavior to amounts when unit_price is changed at Add Invoice View
+ 
+	
+	//Give dynamic behavior to amounts when quantity is changed at Add Invoice View
 	$('#quantity_one').find('select').change(function() {
 		var valUnitPriceOne = $('#unit_price_one').html();
 		var valQuantityOne = $('#quantity_one').find(':selected').text();
@@ -152,15 +172,15 @@ $(document).ready(() => {
 	});
 
 
-	//Testing
-	$('#submit_add_invoice').on('click', event => {
+	//Save invoice information on the database
+	$('#add_invoice_form').submit(function () {
 		var valUnitPriceOne = $('#unit_price_one').html();
+		var formData = $(this).serializeObject();
+		formData.price = valUnitPriceOne;
 		$.ajax({
 			type: 'POST',
             url: '/add_invoice_private_clients',
-            data : JSON.stringify({
-                price: valUnitPriceOne
-            }),
+            data : JSON.stringify(formData),
             dataType: 'json',
             contentType: 'application/json',
             success: function (data) {
