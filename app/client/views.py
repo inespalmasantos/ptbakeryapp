@@ -157,7 +157,7 @@ def edit_retail_client(id):
     form.salesperson.data = client['salesperson']
     form.other_info.data = client['other_info']
 
-    if request.method == 'POST' and form.validate():
+    if request.method == 'POST' and form.validate_on_submit():
         name = request.form['name']
         retail_type = request.form['retail_type']
         delivery_time = request.form['delivery_time']

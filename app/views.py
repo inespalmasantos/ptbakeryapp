@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, url_for, request, jsonify
-from flask_login import login_required, login_user, logout_user, current_user
+from flask_login import login_required
 from app import app, mysql, login_manager
-from models import Users, Clients
+from models import Users, DeliveryTimes, Products, Prices, Clients
 from forms import *
 
 
@@ -22,22 +22,12 @@ def dashboard():
 @app.route('/delivery_times')
 @login_required
 def delivery_times():
-    # Create cursor
-    cur = mysql.connection.cursor()
-
-    # Get Delivery Times
-    result = cur.execute("SELECT * FROM delivery_times")
-
-    delivery_times = cur.fetchall()
-
-    if result > 0:
-        return render_template('delivery_times.html', delivery_times=delivery_times)
+    result = DeliveryTimes.get_all()
+    if len(result) > 0:
+        return render_template('delivery_times.html', delivery_times=result)
     else:
         msg = 'No Delivery Times Found'
         return render_template('delivery_times.html', msg=msg)
-
-    # Close connection
-    cur.close()
 
 
 # Add Delivery Time
@@ -46,24 +36,10 @@ def delivery_times():
 def add_delivery_time():
     form = DeliveryTimeForm(request.form)
     if request.method == 'POST' and form.validate():
-        time = form.time.data
-
-        # Create Cursor
-        cur = mysql.connection.cursor()
-
-        # Execute
-        cur.execute("INSERT INTO delivery_times(time) VALUES(%s)", [time])
-
-        # Commit to DB
-        mysql.connection.commit()
-
-        # Close connection
-        cur.close()
-
-        flash('Delivery Time Created', 'success')
-
+        obj = DeliveryTimes(time=form.time.data)
+        obj.save()
+        flash('Delivery time created', 'success')
         return redirect(url_for('delivery_times'))
-
     return render_template('add_delivery_time.html', form=form)
 
 
@@ -113,35 +89,19 @@ def edit_delivery_time(id):
 # Products
 @app.route('/products')
 @login_required
-def products():
-    # Create cursor
-    cur = mysql.connection.cursor()
-
-    # Get Products
-    result = cur.execute("SELECT * FROM products")
-
-    products = cur.fetchall()
-
-    if result > 0:
-        return render_template('products.html', products=products)
+def get_products():
+    result = Products.get_all()
+    if len(result) > 0:
+        return render_template('products.html', products=result)
     else:
         msg = 'No Products Found'
         return render_template('products.html', msg=msg)
-
-    # Close connection
-    cur.close()
 
 
 # Create choices for aggregate_to field when nr_pieces_per_bag is equal to 1
 # (for add_product and edit_product views)
 def get_names():
-    # Create cursor
-    cur = mysql.connection.cursor()
-    # Get Products
-    result = cur.execute("SELECT name FROM products WHERE nr_pieces_per_bag=1 ORDER BY name")
-    products = cur.fetchall()
-    # Close connection
-    cur.close()
+    products = Products.get_all()
     # Create choices for the aggregate_to SelectField
     names = [(d["name"], d['name']) for d in products]
     return names
@@ -241,16 +201,10 @@ def edit_product(id):
 # Prices
 @app.route('/prices')
 @login_required
-def prices():
-    # Create cursor
-    cur = mysql.connection.cursor()
+def get_prices():
+    prices = Prices.get_all()
 
-    # Get Prices
-    result = cur.execute("SELECT * FROM prices ORDER BY product, client_type, price_type DESC, client_name")
-
-    prices = cur.fetchall()
-
-    if result > 0:
+    if len(prices) > 0:
         return render_template('prices.html', prices=prices)
     else:
         msg = 'No Prices Found'
@@ -598,17 +552,8 @@ def edit_invoice_private_client(id):
 # Create choices for client_id field
 # (for add_invoice view)
 def get_client_ids():
-    # Create cursor
-    cur = mysql.connection.cursor()
-    # Get Products
-    result = cur.execute("SELECT * FROM clients WHERE type = %s ORDER BY id", ['Private'])
-    clients = cur.fetchall()
-    # Close connection
-    cur.close()
-    # Create choices for the aggregate_to SelectField
+    clients = Clients.get_private_clients()
     ids_names = [(d["id"], str(d['id']) + ' / ' + d['name']) for d in clients]
-    # ids_names = [(d["id"], d['id']) for d in clients]
-
     return ids_names
 
 
@@ -679,20 +624,11 @@ def add_invoice_private_clients():
 def get_unit_price():
     prod = request.args.get('product')
     if prod is not None or prod is not '':
-        # Create cursor
-        cur = mysql.connection.cursor()
-        # Get unit price
-        result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = 'Private'", [prod])
-        selected_price = cur.fetchone()
-        # Close connection
+        selected_price = Prices.query.filter_by(product=prod, client_type='Private')
         if selected_price is not None:
             price = selected_price.get('unit_price', 0)
         else:
             price = 0
-        # form = PrivateClientAddInvoiceForm(request.form)
-        # form.unit_price_one.data = price
-        # return render_template('add_invoice_private_client.html', form=form)
-        cur.close()
         return str(price)
     else:
         return ''
@@ -717,15 +653,6 @@ def invoices_retail_clients():
 @login_required
 def manage_invoices_retail_clients():
     return render_template('manage_invoices_retail_clients.html')
-
-
-# Testing
-@app.route('/testing', methods=['GET', 'POST'])
-@login_required
-def testing():
-    prod = request.args.get('product')
-    # return render_template('invoices_Retail_clients.html')
-    return str(prod)
 
 
 # Generate Invoices of the Day Retail Clients
