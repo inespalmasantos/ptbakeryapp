@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/stylesheet.css" type="text/css">
     <link rel="shortcut icon" href="/static/images/favicon.ico" type="image/x-icon">
     <link rel="icon" href="/static/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
   </head>
   <body>
     {% include 'includes/_navbar.html' %}
@@ -19,5 +20,6 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <script src='/static/js/main.js'></script>
+    {% block script %}{% endblock %}
   </body>
 </html>

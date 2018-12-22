@@ -1037,8 +1037,8 @@ def get_product_names_with_prices():
 
 # Ordered Items Form Class
 class OrderedItemsForm(Form):
-	product = SelectField('', choices = [])
-	quantity = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
+	product = SelectField('', choices=[])
+	quantity = SelectField('', choices=[(x, x) for x in range(0, 101)], coerce=int)
 	unit_price = DecimalField('', places=2, rounding=None)
 	amount = DecimalField('', places=2, rounding=None)
 	
@@ -1047,12 +1047,8 @@ class OrderedItemsForm(Form):
 class PrivateClientAddInvoiceForm(Form):
 	client_id = SelectField('Client id / Client name', choices = [], coerce=int)
 	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
-	total_amount = DecimalField('Total amount', places=2, rounding=None)
-	items = FieldList(FormField(OrderedItemsForm), min_entries=5, max_entries=5)
-	product_one = SelectField('', choices = [])
-	quantity_one = SelectField('', choices=[(x, x) for x in range(1, 101)], coerce=int)
-	unit_price_one = DecimalField('', places=2, rounding=None)
-	amount_one = DecimalField('', places=2, rounding=None)
+	total_amount = DecimalField('Total amount (MOP)', places=2, rounding=None)
+	items = FieldList(FormField(OrderedItemsForm), min_entries=20, max_entries=20)
 	
 
 # Add Invoices Private Clients
@@ -1061,19 +1057,15 @@ class PrivateClientAddInvoiceForm(Form):
 def add_invoice_private_clients():
 	form = PrivateClientAddInvoiceForm(request.form)
 	form.client_id.choices = get_client_ids()
-	form.product_one.choices = get_product_names_with_prices()
 	for sub_form in form.items:
 		sub_form.product.choices = get_product_names_with_prices()
 	
 	#if request.method == 'POST' and form.validate():
 	if request.method == 'POST':
 		client_id = request.json.get('client_id', 0)
-		#client_id = form.client_id.data
 		delivery_day = request.json.get('delivery_day', 0)
 		total_amount = request.json.get('total_amount', 0)
-		product_one = request.json.get('product_one', 0)
-		quantity_one = request.json.get('quantity_one', 0)
-		unit_price_one = request.json.get('price', 0)
+		items = request.json.get('items', [])
 
 		# Create Cursor
 		cur = mysql.connection.cursor()
@@ -1086,7 +1078,16 @@ def add_invoice_private_clients():
 		current_invoice = cur.fetchone()
 		
 		# Insert data on the ordered_items table
-		cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, %s, %s, %s)", (current_invoice['id'], product_one, quantity_one, unit_price_one))
+		for item in items:
+			print item
+			product = item.get('product')
+			if product == '(...)':
+				continue
+			else:
+				unit_price = item.get('unitPrice')
+				quantity = item.get('quantity')
+				amount = item.get('amount')
+				cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, %s, %s, %s)", (current_invoice['id'], product, quantity, unit_price))
 		
 		# Commit to DB
 		mysql.connection.commit()
