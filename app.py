@@ -938,10 +938,10 @@ class PrivateClientInvoiceForm(Form):
 	payment_details = StringField('Payment details', [validators.Length(max=255)])
 	other_info = StringField('Other info', [validators.Length(max=255)])
 	
-# Edit Private Client Invoice
-@app.route('/edit_invoice_private_client/<string:id>', methods=['GET', 'POST'])
+# Edit Payment Details Private Client
+@app.route('/edit_payment_details_private_client/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
-def edit_invoice_private_client(id):
+def edit_payment_details_private_client(id):
 	# Create Cursor
 	cur = mysql.connection.cursor()
 
@@ -969,7 +969,6 @@ def edit_invoice_private_client(id):
 	
     
 	if request.method == 'POST' and form.validate():
-		delivery_day = request.form['delivery_day']
 		payment_status = request.form['payment_status']
 		if payment_status == 'Paid':
 			payment_date = request.form['payment_date']
@@ -988,7 +987,7 @@ def edit_invoice_private_client(id):
 		cur = mysql.connection.cursor()
 
 		# Execute
-		cur.execute("UPDATE invoices SET delivery_day=%s, payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, other_info=%s WHERE id=%s", (delivery_day, payment_status, payment_date, payment_method, payment_details, other_info, id))
+		cur.execute("UPDATE invoices SET payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, other_info=%s WHERE id=%s", (payment_status, payment_date, payment_method, payment_details, other_info, id))
         		
 		# Commit to DB
 		mysql.connection.commit()
@@ -996,13 +995,13 @@ def edit_invoice_private_client(id):
 		# Close connection
 		cur.close()
 
-		flash('Invoice Updated', 'success')
+		flash('Payment Details Updated', 'success')
 
 		return redirect(url_for('manage_invoices_private_clients'))
 		
 	else:
 		print(form.errors)
-	return render_template('edit_invoice_private_client.html', form=form)
+	return render_template('edit_payment_details_private_client.html', form=form)
 
 # Create choices for client_id field
 # (for add_invoice view)
@@ -1045,6 +1044,7 @@ class OrderedItemsForm(Form):
 
 # Private Client Add Invoice Form Class
 class PrivateClientAddInvoiceForm(Form):
+	invoice_id = IntegerField('Invoice #')
 	client_id = SelectField('Client id / Client name', choices = [], coerce=int)
 	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
 	total_amount = DecimalField('Total amount (MOP)', places=2, rounding=None)
@@ -1060,6 +1060,15 @@ def add_invoice_private_clients():
 	for sub_form in form.items:
 		sub_form.product.choices = get_product_names_with_prices()
 	
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get invoice id
+	result = cur.execute("SELECT * FROM invoices ORDER BY id DESC")
+	invoice = cur.fetchone()
+	form.invoice_id.data = invoice['id'] + 1
+
+
 	#if request.method == 'POST' and form.validate():
 	if request.method == 'POST':
 		client_id = request.json.get('client_id', 0)
@@ -1105,7 +1114,7 @@ def add_invoice_private_clients():
 
 	return render_template('add_invoice_private_clients.html', form=form)
 
-# Update Unite Price on Add Invoice View
+# Update Unite Price on Add Invoice Private Client View
 @app.route('/get_unit_price', methods=['GET'])
 @is_logged_in
 def get_unit_price():
@@ -1123,6 +1132,78 @@ def get_unit_price():
 	#return render_template('add_invoice_private_client.html', form=form)
 	return str(price)
 
+# Edit Invoice Private Client
+@app.route('/edit_invoice_private_client/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_invoice_private_client(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get price by id
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE invoices.id = %s", [id])
+	invoice = cur.fetchone()
+
+	# Get ordered items by invoice id
+	result_two = cur.execute("SELECT * FROM ordered_items WHERE invoice_id = %s", [id])
+	ordered_items = cur.fetchall()
+	
+	# Get form 
+	form = PrivateClientAddInvoiceForm(request.form)
+	form.client_id.choices = get_client_ids()
+	form.invoice_id.data = invoice['id']
+	form.client_id.data = invoice['client_id']
+	form.delivery_day.data = invoice['delivery_day']
+	
+	for i, sub_form in enumerate(form.items):
+		sub_form.product.choices = get_product_names_with_prices()
+		for j, ordered_item in enumerate(ordered_items):
+			if i == j:
+				sub_form.product.data = ordered_item['product_description']
+				sub_form.quantity.data = ordered_item['quantity_ordered']
+	
+	if request.method == 'POST':
+		client_id = request.json.get('client_id', 0)
+		delivery_day = request.json.get('delivery_day', 0)
+		total_amount = request.json.get('total_amount', 0)
+		items = request.json.get('items', [])
+
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute and insert into the database general invoice data
+		cur.execute("UPDATE invoices SET client_id = %s, delivery_day = %s, total_amount = %s WHERE id = %s", (client_id, delivery_day, total_amount, invoice['id']))
+		
+		# Drop previous ordered_items from ordered_items table
+		cur.execute("DELETE FROM ordered_items WHERE invoice_id = %s", [invoice['id']])
+
+		# Insert new data on the ordered_items table
+		for item in items:
+			print item
+			product = item.get('product')
+			if product == '(...)':
+				continue
+			else:
+				unit_price = item.get('unitPrice')
+				quantity = item.get('quantity')
+				amount = item.get('amount')
+				cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, ordered_unit_price) values(%s, %s, %s, %s)", (invoice['id'], product, quantity, unit_price))
+		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Invoice Updated', 'success')
+
+		#return redirect(url_for('manage_invoices_private_clients'))
+
+		return jsonify({
+            'message': 'success'
+        })
+
+	return render_template('edit_invoice_private_client.html', form=form)
+	
 # Convert Invoices to PDF Private Clients
 @app.route('/convert_invoices_pdf_private_clients')
 @is_logged_in
@@ -1139,16 +1220,263 @@ def invoices_retail_clients():
 @app.route('/manage_invoices_retail_clients', methods=['GET', 'POST'])
 @is_logged_in
 def manage_invoices_retail_clients():
-	return render_template('manage_invoices_retail_clients.html')
+	# Create cursor
+	cur = mysql.connection.cursor()
 
-# Testing
-@app.route('/testing', methods=['GET', 'POST'])
+	# Get Invoices
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE clients.type = 'Retail'")
+
+	invoices = cur.fetchall()
+
+	if result > 0:
+		return render_template('manage_invoices_retail_clients.html', invoices=invoices)
+	else:
+		msg = 'No Invoices Found'
+		return render_template('manage_invoices_retail_clients.html', msg=msg)
+
+	# Close connection
+	cur.close()
+	
+# Retail Client Invoice Form Class
+class RetailClientInvoiceForm(Form):
+	invoice_id = IntegerField('Invoice #')
+	client_id = IntegerField('Client id')
+	client_n = StringField('Client name')
+	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
+	delivery_time = SelectField('Delivery time', choices=[])
+	total_amount = DecimalField('Total amount', places=2, rounding=None)
+	payment_scheme = SelectField('Payment scheme', choices=[('CoD', 'CoD'), ('WB', 'WB'), ('MB', 'MB'), ('TBC', 'TBC')])
+	payment_status = SelectField('Payment status', choices=[('Not paid', 'Not paid'), ('Paid', 'Paid')])
+	payment_date = DateField('Payment date', format='%Y-%m-%d')
+	payment_method = SelectField('Payment method', choices=[('Bank transfer', 'Bank transfer'), ('Cash', 'Cash')])
+	payment_details = StringField('Payment details', [validators.Length(max=255)])
+	statement_issued = SelectField('Statement issued', choices=[('Yes', 'Yes'), ('No', 'No')])
+	statement_id = IntegerField('Statement id')
+	other_info = StringField('Other info', [validators.Length(max=255)])
+		
+# Edit Payment Details Retail Client
+@app.route('/edit_payment_details_retail_client/<string:id>', methods=['GET', 'POST'])
 @is_logged_in
-def testing():
-	prod = request.args.get('product')
-	#return render_template('invoices_Retail_clients.html')
-	return str(prod)
+def edit_payment_details_retail_client(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
 
+	# Get price by id
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE invoices.id = %s", [id])
+	invoice = cur.fetchone()
+
+	# Get form 
+	form = RetailClientInvoiceForm(request.form)
+	form.delivery_time.choices = get_delivery_times()
+	form.invoice_id.data = invoice['id']
+	form.client_id.data = invoice['client_id']
+	form.client_n.data = invoice['name']
+	form.delivery_day.data = invoice['delivery_day']
+	form.delivery_time.data = invoice['delivery_time']
+	form.total_amount.data = invoice['total_amount']
+	form.payment_scheme.data = invoice['payment_scheme']
+	form.payment_status.data = invoice['payment_status']
+	if form.payment_status.data == 'Paid':
+		form.payment_date.data = invoice['payment_date']
+		form.payment_method.data = invoice['payment_method']
+		form.payment_details.data = invoice['payment_details']
+	else:
+		form.payment_date.data = invoice['payment_date']
+		form.payment_method.data = 'Bank transfer'
+		form.payment_details.data = ''
+	if form.payment_scheme.data == 'WB' or form.payment_scheme.data == 'MB':
+		form.statement_issued.data = invoice['statement_issued']
+		form.statement_id.data = invoice['statement_id']
+	else:
+		form.statement_issued.data = 'No'
+		form.statement_id.data = 0
+	form.other_info.data = invoice['other_info']
+	
+
+	if request.method == 'POST' and form.validate():
+		payment_scheme = request.form['payment_scheme']
+		payment_status = request.form['payment_status']
+		if payment_status == 'Paid':
+			payment_date = request.form['payment_date']
+			payment_method = request.form['payment_method']
+			payment_details = request.form['payment_details']
+		else:
+			#Ficticious payment_date to avoid eliminating the form.validate() function
+			payment_date = '2000-01-01'
+			payment_method = ''
+			payment_details = ''
+
+		other_info = request.form['other_info']
+
+		
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute
+		cur.execute("UPDATE invoices SET payment_scheme=%s, payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, other_info=%s WHERE id=%s", (payment_scheme, payment_status, payment_date, payment_method, payment_details, other_info, id))
+        		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Payment Details Updated', 'success')
+
+		return redirect(url_for('manage_invoices_retail_clients'))
+		
+	else:
+		print(form.errors)
+	return render_template('edit_payment_details_retail_client.html', form=form)
+
+# Create choices for client_name field - Retail clients
+# (for add_invoice view)
+def get_retail_client_names():
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get Products
+	result = cur.execute("SELECT * FROM clients WHERE type = %s ORDER BY name", ['Retail'])
+	clients = cur.fetchall()
+	# Close connection
+	cur.close()
+	# Create choices for the aggregate_to SelectField
+	names = [(d["name"], d["name"]) for d in clients]
+	
+	return names
+
+# Create choices for product field - Retail clients
+# (for add_invoice_private_clients view)
+def get_retail_product_names_with_prices():
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get Products
+	result = cur.execute("SELECT product FROM prices WHERE client_type = %s AND price_type = %s ORDER BY product", ['Retail', 'Standard'])
+	products = cur.fetchall()
+	# Close connection
+	cur.close()
+	# Create choices for the aggregate_to SelectField
+	names = [(d['product'], d['product']) for d in products]
+	return names
+
+
+# Retail Client Ordered Items Form Class
+class RetailClientOrderedItemsForm(Form):
+	product = SelectField('', choices=[])
+	quantity = SelectField('', choices=[(x, x) for x in range(0, 101)], coerce=int)
+	returned_quantity = SelectField('', choices=[(x, x) for x in range(0, 101)], coerce=int)
+	unit_price = DecimalField('', places=2, rounding=None)
+	amount = DecimalField('', places=2, rounding=None)
+	
+
+# Retail Client Add Invoice Form Class
+class RetailClientAddInvoiceForm(Form):
+	invoice_id = IntegerField('Invoice #')
+	client_n = SelectField('Client name', choices = [])
+	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
+	total_amount = DecimalField('Total amount (MOP)', places=2, rounding=None)
+	items = FieldList(FormField(RetailClientOrderedItemsForm), min_entries=20, max_entries=20)
+
+# Add Invoices Retail Clients
+@app.route('/add_invoice_retail_clients', methods=['GET', 'POST'])
+@is_logged_in
+def add_invoice_retail_clients():
+	form = RetailClientAddInvoiceForm(request.form)
+	form.client_n.choices = get_retail_client_names()
+	for sub_form in form.items:
+		sub_form.product.choices = get_retail_product_names_with_prices()
+	
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get invoice id
+	result = cur.execute("SELECT * FROM invoices ORDER BY id DESC")
+	invoice = cur.fetchone()
+	form.invoice_id.data = invoice['id'] + 1
+
+	#if request.method == 'POST' and form.validate():
+	if request.method == 'POST':
+		client_n = request.json.get('client_n', 0)
+		delivery_day = request.json.get('delivery_day', 0)
+		total_amount = request.json.get('total_amount', 0)
+		items = request.json.get('items', [])
+
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Get the client id
+		result = cur.execute("SELECT * FROM clients WHERE name = %s ORDER BY id DESC LIMIT 1", [client_n])
+		client = cur.fetchone()
+
+		# Execute and insert into the database general invoice data
+		cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client['id'], delivery_day, total_amount))
+		
+		# Get the invoice id of the new invoice
+		result = cur.execute("SELECT * FROM invoices ORDER BY id DESC LIMIT 1;")
+		current_invoice = cur.fetchone()
+		
+		# Insert data on the ordered_items table
+		for item in items:
+			print item
+			product = item.get('product')
+			if product == '(...)':
+				continue
+			else:
+				unit_price = item.get('unitPrice')
+				quantity = item.get('quantity')
+				returned_quantity = item.get('returnedQuantity')
+				amount = item.get('amount')
+				cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, quantity_returned, ordered_unit_price) values(%s, %s, %s, %s, %s)", (current_invoice['id'], product, quantity, returned_quantity, unit_price))
+		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Invoice Created', 'success')
+
+		#return redirect(url_for('manage_invoices_private_clients'))
+
+		return jsonify({
+            'message': 'success'
+        })
+
+	return render_template('add_invoice_retail_clients.html', form=form)
+
+# Update Unite Price on Add Invoice Retail Client View
+@app.route('/get_unit_price_retail_client', methods=['GET'])
+@is_logged_in
+def get_unit_price_retail_client():
+	prod = request.args.get('product')
+	client_n = request.args.get('name')
+	
+	# Set unit price to 0.00 if product is default
+	if prod == '(...)':
+		return str(0.00)
+	
+	# Set unit price on other scenarios
+	else:
+		# Create cursor
+		cur = mysql.connection.cursor()
+
+		# Check if there is a negotiated unit price for the selected product and client and get the unit price
+		result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = 'Retail' AND client_name = %s", [prod, client_n])
+		number_of_rows = len(cur.fetchall())
+
+		if number_of_rows > 0:
+
+			result = cur.execute("SELECT * FROM prices WHERE product = %s AND client_name = %s", [prod, client_n])
+			selected_price = cur.fetchone()
+
+		else:
+			#return str(2.00)
+			resultTwo = cur.execute("SELECT * FROM prices WHERE product = %s AND client_type = %s AND price_type = %s", [prod, 'Retail', 'Standard'])
+			selected_price = cur.fetchone()
+		
+		# Close connection
+		cur.close()
+		price = selected_price['unit_price']
+		return str(price)
 
 
 # Generate Invoices of the Day Retail Clients

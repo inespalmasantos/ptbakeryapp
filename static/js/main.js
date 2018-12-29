@@ -85,11 +85,25 @@ $(document).ready(function () {
 				}
 	})
 
-	//Give dynamic behavior to Edit Invoice Private Client View
+	//Give dynamic behavior to Edit Payment Details Private and Retail Client Views
 	var paymentStatus = $('#payment_status').find(':selected').text();
+	var paymentScheme = $('#payment_scheme').find(':selected').text();
+	var statementIssued = $('#statement_issued').find(':selected').text();
 
-	document.querySelector('#delivery_day').type = "date";
-	document.querySelector('#delivery_day').required = "date";
+	if(document.querySelector('#delivery_day') == null) {
+
+	} else {
+		document.querySelector('#delivery_day').type = "date";
+		document.querySelector('#delivery_day').required = "date";
+	}
+
+	if(document.querySelector('#payment_date') == null) {
+
+	} else {
+		document.querySelector('#payment_date').children[1].type = "date";
+		document.querySelector('#payment_date').children[1].required = "date";	
+	}
+	
 
 	if(paymentStatus === 'Paid') {
 		$('#payment_date').show();
@@ -99,6 +113,18 @@ $(document).ready(function () {
 		$('#payment_date').hide();
 		$('#payment_method').hide();
 		$('#payment_details').hide();
+	}
+
+	if(paymentScheme === 'WB' || paymentScheme === 'MB') {
+		$('#statement_issued').show();
+	} else {
+		$('#statement_issued').hide();
+	}
+
+	if(statementIssued === 'Yes') {
+		$('#statement_id').show();
+	} else {
+		$('#statement_id').hide();
 	}
 
 	$('#payment_status').find('select').change(function() {
@@ -114,12 +140,64 @@ $(document).ready(function () {
 	    }
 	});
 	
+	$('#payment_scheme').find('select').change(function() {
+		var valPaymentScheme = $('#payment_scheme').find(':selected').text();
+		if(valPaymentScheme === 'WB' || valPaymentScheme === 'MB') {
+		    $('#statement_issued').show();
+	    } else {
+		    $('#statement_issued').hide();
+	    }
+	});
+
+
     //Add lines to Add Invoice View
 	var invoiceTableRows = $('#invoice-body tr');
 
 	for(var rowNumber = 1; rowNumber <= invoiceTableRows.length; rowNumber++) {
 		$('#invoice-row-' + rowNumber).hide();
 	}
+
+	var invoiceRowNumberEdit = 0;
+
+	//edit invoices menu
+	for(var index = 0; index <= invoiceTableRows.length; index++) {
+		var nodes = $('#items-' + index + '-product');
+		if(nodes.find(":selected").text() !== '(...)') {
+			$('#invoice-row-' + index).show();
+			$('#add-edit-' + index).hide();
+			$('#minus-edit-' + index).hide();
+			invoiceRowNumberEdit++;
+		} else if(nodes.find(":selected").text() === '(...)') {
+			$('#add-edit-' + (index - 1)).show();
+			$('#minus-edit-' + (index - 1)).show();
+			break
+		}
+	}
+
+	console.log(invoiceRowNumberEdit);
+
+	$('.button-invoice-edit').on('click', function(event) {
+		if(event.target.id === 'add-edit-' + (invoiceRowNumberEdit - 1)) {
+			console.log('teste');
+			$('#invoice-row-' + (invoiceRowNumberEdit)).show();
+			$('#add-edit-' + (invoiceRowNumberEdit - 1)).hide();
+			$('#minus-edit-' + (invoiceRowNumberEdit - 1)).hide();
+			invoiceRowNumberEdit++;
+		} else if(event.target.id === 'minus-edit-' + (invoiceRowNumberEdit - 1)) {
+			console.log('teste2')
+			$('#invoice-row-' + (invoiceRowNumberEdit - 1)).hide();
+			$('#items-' + (invoiceRowNumberEdit - 1) + '-product').val('(...)');
+			$('#items-' + (invoiceRowNumberEdit - 1) + '-quantity').val('0');
+			$('#unit_price-' + (invoiceRowNumberEdit - 1)).text('0.00');
+			$('#amount-' + (invoiceRowNumberEdit - 1)).text('0.00');
+			$('#add-edit-' + (invoiceRowNumberEdit - 2)).show();
+			if(invoiceRowNumberEdit > 2) {
+				$('#minus-edit-' + (invoiceRowNumberEdit - 2)).show();
+			}
+			getTotalAmount();
+			invoiceRowNumberEdit--;
+		}
+	})
 
 	var invoiceRowNumber = 0;
 
@@ -136,6 +214,7 @@ $(document).ready(function () {
 			$('#invoice-row-' + (invoiceRowNumber)).hide();
 			$('#items-' + invoiceRowNumber + '-product').val('(...)');
 			$('#items-' + invoiceRowNumber + '-quantity').val('0');
+			$('#items-' + invoiceRowNumber + '-returned_quantity').val('0');
 			$('#unit_price-' + invoiceRowNumber).text('0.00');
 			$('#amount-' + invoiceRowNumber).text('0.00');
 			$('#add-' + (invoiceRowNumber - 1)).show();
@@ -242,7 +321,176 @@ $(document).ready(function () {
 				},
 			})
 		});
+
+		//Save changes on invoice information to the backend
+		$('#edit_invoice_form').submit(function (event) {
+			event.preventDefault();
+			var items = [];
+			var invoiceTable = $('#invoice-body');
+			var formData = $(this).serializeObject();
+			var totalAmount = $('.total-invoice').html();
+			var invoiceNumber = $('#invoice_id').val(); 
+			$.each(invoiceTable.children('tr'), function (index) {
+				var product = $('#product-' + index).find('select').find(':selected').text();
+				var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+				var unitPrice = $('#unit_price-' + index).html();
+				var amount = $('#amount-' + index).html();
+				items.push({product, quantity, unitPrice, amount});
+			});
+			$.ajax({
+				type: 'POST',
+				url: '/edit_invoice_private_client/' + invoiceNumber,
+				data : JSON.stringify({
+					client_id: formData.client_id,
+					delivery_day: formData.delivery_day,
+					total_amount: totalAmount,
+					items: items
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function (data) {
+					console.log(data);
+					window.location = '/manage_invoices_private_clients';
+				},
+			})
+		});
 	};
+
+	window.APP.initAddInvoiceRetailClient  = function initAddInvoiceRetailClient() {
+    	console.log('Init retail invoice');
+    	var invoiceRows = $('.invoice-row');
+ 		function getUnitPriceForProduct (invoiceRow) {
+			var clientName = $('#client_n').find('select').find(':selected').text();
+			var index = invoiceRow.attr('id').split('-')[2];
+			var product = $('#product-' + index).find('select').find(':selected').text();
+			var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+			var returned = $('#returned-quantity-' + index).find('select').find(':selected').text();
+			$.ajax({
+				type: 'GET',
+				url: '/get_unit_price_retail_client',
+				data: {
+					product: product,
+					name: clientName
+				},
+				dataType: 'json',
+				success: function (response) {
+					$('#unit_price-' + index).html(response.toFixed(2));
+					$('#amount-' + index).html((response * (quantity - returned)).toFixed(2));
+					getTotalAmount();
+					//$('#delivery_day').datepicker();
+	 			}
+	 		});
+ 		}
+
+ 		//Set unit_price for default products at Add Invoice View
+ 		$.each(invoiceRows, function (index, invoiceRow) {
+			getUnitPriceForProduct($(invoiceRow));
+		});
+
+ 		//Give dynamic behavior unit_prices and amounts when product is changed at Add Invoice View
+		$('.form-product').find('select').change(function () {
+			var invoiceRow = $(this).closest('.invoice-row');
+			getUnitPriceForProduct(invoiceRow);
+			getTotalAmount();
+		});
+
+		//Give dynamic behavior unit_prices and amounts when client name is changed at Add Invoice View
+		$('#client_n').find('select').change(function () {
+			$.each(invoiceRows, function (index, invoiceRow) {
+				getUnitPriceForProduct($(invoiceRow));
+			});
+			getTotalAmount();
+		});
+
+		//Give dynamic behavior to amounts when quantity is changed at Add Invoice View
+		$('.form-quantity').find('select').change(function () {
+			var invoiceRow = $(this).closest('.invoice-row');
+			var index = invoiceRow.attr('id').split('-')[2];
+			var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+			var returned = $('#returned-quantity-' + index).find('select').find(':selected').text();
+			var unitPrice = $('#unit_price-' + index).html();
+			$('#amount-' + index).html((unitPrice * (quantity - returned)).toFixed(2));
+			getTotalAmount();
+		});
+
+		//Give dynamic behavior to amounts when returned quantity is changed at Add Invoice View
+		$('.form-returned-quantity').find('select').change(function () {
+			var invoiceRow = $(this).closest('.invoice-row');
+			var index = invoiceRow.attr('id').split('-')[2];
+			var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+			var returned = $('#returned-quantity-' + index).find('select').find(':selected').text();
+			var unitPrice = $('#unit_price-' + index).html();
+			$('#amount-' + index).html((unitPrice * (quantity - returned)).toFixed(2));
+			getTotalAmount();
+		});
+		
+		//Save invoice information to the backend
+		$('#add_invoice_form').submit(function (event) {
+			event.preventDefault();
+			var items = [];
+			var invoiceTable = $('#invoice-body');
+			var formData = $(this).serializeObject();
+			var totalAmount = $('.total-invoice').html();
+			$.each(invoiceTable.children('tr'), function (index) {
+				var product = $('#product-' + index).find('select').find(':selected').text();
+				var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+				var returnedQuantity = $('#returned_quantity-' + index).find('select').find(':selected').text();
+				var unitPrice = $('#unit_price-' + index).html();
+				var amount = $('#amount-' + index).html();
+				items.push({product, quantity, returnedQuantity, unitPrice, amount});
+			});
+			$.ajax({
+				type: 'POST',
+				url: '/add_invoice_private_clients',
+				data : JSON.stringify({
+					client_n: formData.client_n,
+					delivery_day: formData.delivery_day,
+					total_amount: totalAmount,
+					items: items
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function (data) {
+					console.log(data);
+					window.location = '/manage_invoices_private_clients';
+				},
+			})
+		});
+
+		//Save changes on invoice information to the backend
+		$('#edit_invoice_form').submit(function (event) {
+			event.preventDefault();
+			var items = [];
+			var invoiceTable = $('#invoice-body');
+			var formData = $(this).serializeObject();
+			var totalAmount = $('.total-invoice').html();
+			var invoiceNumber = $('#invoice_id').val(); 
+			$.each(invoiceTable.children('tr'), function (index) {
+				var product = $('#product-' + index).find('select').find(':selected').text();
+				var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+				var unitPrice = $('#unit_price-' + index).html();
+				var amount = $('#amount-' + index).html();
+				items.push({product, quantity, unitPrice, amount});
+			});
+			$.ajax({
+				type: 'POST',
+				url: '/edit_invoice_private_client/' + invoiceNumber,
+				data : JSON.stringify({
+					client_id: formData.client_id,
+					delivery_day: formData.delivery_day,
+					total_amount: totalAmount,
+					items: items
+				}),
+				dataType: 'json',
+				contentType: 'application/json',
+				success: function (data) {
+					console.log(data);
+					window.location = '/manage_invoices_private_clients';
+				},
+			})
+		});
+	};
+	
 
 });
 

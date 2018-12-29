@@ -2,5 +2,64 @@
 
 {% block body %}
   <h3>Manage Invoices <small>Retail Clients</small></h3>
-  <a id="submit_add_invoice">abb</a>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/invoices_retail_clients">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_invoice_retail_clients">Add Invoice</a></button>
+  <div class="table-container">
+  <table class="table table-striped table-sm">
+  <thead>
+    <tr>
+      <th class="align-middle word-wrap">Invoice #</th>
+      <th class="align-middle word-wrap text-center">Client name</th>
+      <th class="align-middle word-wrap text-center">Delivery day</th>
+      <th class="align-middle word-wrap text-center">Delivery time</th>
+      <th class="align-middle word-wrap text-center">Total amount</th>
+      <th class="align-middle word-wrap text-center">Payment scheme	</th>
+      <th class="align-middle word-wrap text-center">Payment status</th>
+      <th class="align-middle word-wrap text-center">Payment date</th>
+      <th class="align-middle word-wrap text-center">Payment method</th>
+      <th class="align-middle word-wrap text-center">Payment details</th>
+      <th class="align-middle word-wrap text-center">Statement issued</th>
+      <th class="align-middle word-wrap text-center">Statement id</th>
+      <th class="align-middle word-wrap text-center">Other info</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for invoice in invoices|sort(attribute="id") %}
+    <tr>
+      <td class="align-middle word-wrap">{{invoice.id}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.name}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.delivery_day}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.delivery_time}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.total_amount}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_scheme}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_status}}</td>
+      {% if invoice.payment_status=='Not paid' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.payment_date}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{invoice.payment_method}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_details}}</td>
+      {% if invoice.payment_scheme=='CoD' or invoice.payment_scheme=='TBC' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.statement_issued}}</td>
+      {% endif %}
+      {% if invoice.statement_issued=='No' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.statement_id}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{invoice.other_info}}</td>
+      <td><a href="edit_invoice_retail_client/{{invoice.id}}">Invoice</a></td>
+      <td><a href="edit_payment_details_retail_client/{{invoice.id}}">Payment</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+
+  
 {% endblock %}
