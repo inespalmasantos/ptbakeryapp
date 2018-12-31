@@ -902,12 +902,6 @@ def invoices():
 @app.route('/invoices_private_clients')
 @is_logged_in
 def invoices_private_clients():
-	return render_template('invoices_private_clients.html')
-
-# Manage Invoices Private Clients
-@app.route('/manage_invoices_private_clients')
-@is_logged_in
-def manage_invoices_private_clients():
 	# Create cursor
 	cur = mysql.connection.cursor()
 
@@ -917,10 +911,10 @@ def manage_invoices_private_clients():
 	invoices = cur.fetchall()
 
 	if result > 0:
-		return render_template('manage_invoices_private_clients.html', invoices=invoices)
+		return render_template('invoices_private_clients.html', invoices=invoices)
 	else:
 		msg = 'No Invoices Found'
-		return render_template('manage_invoices_private_clients.html', msg=msg)
+		return render_template('invoices_private_clients.html', msg=msg)
 
 	# Close connection
 	cur.close()
@@ -997,7 +991,7 @@ def edit_payment_details_private_client(id):
 
 		flash('Payment Details Updated', 'success')
 
-		return redirect(url_for('manage_invoices_private_clients'))
+		return redirect(url_for('invoices_private_clients'))
 		
 	else:
 		print(form.errors)
@@ -1106,8 +1100,6 @@ def add_invoice_private_clients():
 
 		flash('Invoice Created', 'success')
 
-		#return redirect(url_for('manage_invoices_private_clients'))
-
 		return jsonify({
             'message': 'success'
         })
@@ -1196,8 +1188,6 @@ def edit_invoice_private_client(id):
 
 		flash('Invoice Updated', 'success')
 
-		#return redirect(url_for('manage_invoices_private_clients'))
-
 		return jsonify({
             'message': 'success'
         })
@@ -1211,15 +1201,9 @@ def convert_invoices_pdf_private_clients():
 	return render_template('convert_invoices_pdf_private_clients.html')
 
 # Invoices Retail Clients
-@app.route('/invoices_retail_clients')
+@app.route('/invoices_retail_clients', methods=['GET', 'POST'])
 @is_logged_in
 def invoices_retail_clients():
-	return render_template('invoices_Retail_clients.html')
-
-# Manage Invoices Retail Clients
-@app.route('/manage_invoices_retail_clients', methods=['GET', 'POST'])
-@is_logged_in
-def manage_invoices_retail_clients():
 	# Create cursor
 	cur = mysql.connection.cursor()
 
@@ -1229,10 +1213,10 @@ def manage_invoices_retail_clients():
 	invoices = cur.fetchall()
 
 	if result > 0:
-		return render_template('manage_invoices_retail_clients.html', invoices=invoices)
+		return render_template('invoices_retail_clients.html', invoices=invoices)
 	else:
 		msg = 'No Invoices Found'
-		return render_template('manage_invoices_retail_clients.html', msg=msg)
+		return render_template('invoices_retail_clients.html', msg=msg)
 
 	# Close connection
 	cur.close()
@@ -1240,7 +1224,6 @@ def manage_invoices_retail_clients():
 # Retail Client Invoice Form Class
 class RetailClientInvoiceForm(Form):
 	invoice_id = IntegerField('Invoice #')
-	client_id = IntegerField('Client id')
 	client_n = StringField('Client name')
 	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
 	delivery_time = SelectField('Delivery time', choices=[])
@@ -1269,7 +1252,6 @@ def edit_payment_details_retail_client(id):
 	form = RetailClientInvoiceForm(request.form)
 	form.delivery_time.choices = get_delivery_times()
 	form.invoice_id.data = invoice['id']
-	form.client_id.data = invoice['client_id']
 	form.client_n.data = invoice['name']
 	form.delivery_day.data = invoice['delivery_day']
 	form.delivery_time.data = invoice['delivery_time']
@@ -1323,7 +1305,7 @@ def edit_payment_details_retail_client(id):
 
 		flash('Payment Details Updated', 'success')
 
-		return redirect(url_for('manage_invoices_retail_clients'))
+		return redirect(url_for('invoices_retail_clients'))
 		
 	else:
 		print(form.errors)
@@ -1373,15 +1355,20 @@ class RetailClientAddInvoiceForm(Form):
 	invoice_id = IntegerField('Invoice #')
 	client_n = SelectField('Client name', choices = [])
 	delivery_day = DateField('Delivery day', format='%Y-%m-%d')
+	delivery_time = SelectField('Delivery time', choices = [])
 	total_amount = DecimalField('Total amount (MOP)', places=2, rounding=None)
+	payment_scheme = SelectField('Payment scheme', choices=[('CoD', 'CoD'), ('WB', 'WB'), ('MB', 'MB'), ('TBC', 'TBC')])
+	other_comments = StringField('Other comments', [validators.Length(max=100)])
 	items = FieldList(FormField(RetailClientOrderedItemsForm), min_entries=20, max_entries=20)
 
 # Add Invoices Retail Clients
 @app.route('/add_invoice_retail_clients', methods=['GET', 'POST'])
 @is_logged_in
 def add_invoice_retail_clients():
+
 	form = RetailClientAddInvoiceForm(request.form)
 	form.client_n.choices = get_retail_client_names()
+	form.delivery_time.choices = get_delivery_times()
 	for sub_form in form.items:
 		sub_form.product.choices = get_retail_product_names_with_prices()
 	
@@ -1397,6 +1384,9 @@ def add_invoice_retail_clients():
 	if request.method == 'POST':
 		client_n = request.json.get('client_n', 0)
 		delivery_day = request.json.get('delivery_day', 0)
+		delivery_time = request.json.get('delivery_time', 0)
+		payment_scheme = request.json.get('payment_scheme', 0)
+		other_comments = request.json.get('other_comments', 0)
 		total_amount = request.json.get('total_amount', 0)
 		items = request.json.get('items', [])
 
@@ -1408,7 +1398,7 @@ def add_invoice_retail_clients():
 		client = cur.fetchone()
 
 		# Execute and insert into the database general invoice data
-		cur.execute("INSERT INTO invoices(client_id, delivery_day, total_amount, payment_status, payment_method, payment_details, other_info) VALUES(%s, %s, %s, 'Not paid', '', '', '')", (client['id'], delivery_day, total_amount))
+		cur.execute("INSERT INTO invoices(client_id, delivery_day, delivery_time, total_amount, payment_scheme, other_comments, payment_status, payment_method, payment_details, statement_issued, other_info) VALUES(%s, %s, %s, %s, %s, %s, 'Not paid', '', '', 'No', '')", (client['id'], delivery_day, delivery_time, total_amount, payment_scheme, other_comments))
 		
 		# Get the invoice id of the new invoice
 		result = cur.execute("SELECT * FROM invoices ORDER BY id DESC LIMIT 1;")
@@ -1434,8 +1424,6 @@ def add_invoice_retail_clients():
 		cur.close()
 
 		flash('Invoice Created', 'success')
-
-		#return redirect(url_for('manage_invoices_private_clients'))
 
 		return jsonify({
             'message': 'success'
@@ -1477,6 +1465,119 @@ def get_unit_price_retail_client():
 		cur.close()
 		price = selected_price['unit_price']
 		return str(price)
+
+# Get delivery time for retail client
+@app.route('/get_delivery_time', methods=['GET'])
+@is_logged_in
+def get_delivery_time():
+	client_n = request.args.get('name')
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get delivery time
+	result = cur.execute("SELECT * FROM clients WHERE name = %s", [client_n])
+	selected_time = cur.fetchone()
+	# Close connection
+	cur.close()
+	time = (selected_time['delivery_time'])
+	return json.dumps(time)
+
+# Get payment scheme for retail client
+@app.route('/get_payment_scheme', methods=['GET'])
+@is_logged_in
+def get_payment_scheme():
+	client_n = request.args.get('name')
+	# Create cursor
+	cur = mysql.connection.cursor()
+	# Get delivery time
+	result = cur.execute("SELECT * FROM clients WHERE name = %s", [client_n])
+	selected_scheme = cur.fetchone()
+	# Close connection
+	cur.close()
+	scheme = (selected_scheme['payment_scheme'])
+	return json.dumps(scheme)
+
+# Edit Invoice Retail Client
+@app.route('/edit_invoice_retail_client/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_invoice_retail_client(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get price by id
+	result = cur.execute("SELECT * FROM invoices INNER JOIN clients ON invoices.client_id = clients.id WHERE invoices.id = %s", [id])
+	invoice = cur.fetchone()
+
+	# Get ordered items by invoice id
+	result_two = cur.execute("SELECT * FROM ordered_items WHERE invoice_id = %s", [id])
+	ordered_items = cur.fetchall()
+	
+	# Get form 
+	form = RetailClientAddInvoiceForm(request.form)
+	form.client_n.choices = get_retail_client_names()
+	form.delivery_time.choices = get_delivery_times()
+	form.invoice_id.data = invoice['id']
+	form.client_n.data = invoice['name']
+	form.delivery_day.data = invoice['delivery_day']
+	form.delivery_time.data = invoice['delivery_time']
+	form.payment_scheme.data = invoice['payment_scheme']
+	form.other_comments.data = invoice['other_comments']
+	
+	for i, sub_form in enumerate(form.items):
+		sub_form.product.choices = get_retail_product_names_with_prices()
+		for j, ordered_item in enumerate(ordered_items):
+			if i == j:
+				sub_form.product.data = ordered_item['product_description']
+				sub_form.quantity.data = ordered_item['quantity_ordered']
+				sub_form.returned_quantity.data = ordered_item['quantity_returned']
+	
+	if request.method == 'POST':
+		client_n = request.json.get('client_n', 0)
+		delivery_day = request.json.get('delivery_day', 0)
+		delivery_time = request.json.get('delivery_time', 0)
+		payment_scheme = request.json.get('payment_scheme', 0)
+		other_comments = request.json.get('other_comments', 0)
+		total_amount = request.json.get('total_amount', 0)
+		items = request.json.get('items', [])
+
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Get the client id
+		result = cur.execute("SELECT * FROM clients WHERE name = %s ORDER BY id DESC LIMIT 1", [client_n])
+		client = cur.fetchone()
+
+		# Execute and insert into the database general invoice data
+		cur.execute("UPDATE invoices SET client_id = %s, delivery_day = %s, delivery_time = %s, payment_scheme = %s, other_comments = %s, total_amount = %s WHERE id = %s", (client['id'], delivery_day, delivery_time, payment_scheme, other_comments, total_amount, invoice['id']))
+		
+		# Drop previous ordered_items from ordered_items table
+		cur.execute("DELETE FROM ordered_items WHERE invoice_id = %s", [invoice['id']])
+
+		# Insert new data on the ordered_items table
+		for item in items:
+			print item
+			product = item.get('product')
+			if product == '(...)':
+				continue
+			else:
+				unit_price = item.get('unitPrice')
+				quantity = item.get('quantity')
+				returned_quantity = item.get('returnedQuantity')
+				amount = item.get('amount')
+				cur.execute("INSERT INTO ordered_items(invoice_id, product_description, quantity_ordered, quantity_returned, ordered_unit_price) values(%s, %s, %s, %s, %s)", (invoice['id'], product, quantity, returned_quantity, unit_price))
+		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Invoice Updated', 'success')
+
+		return jsonify({
+            'message': 'success'
+        })
+
+	return render_template('edit_invoice_retail_client.html', form=form)
 
 
 # Generate Invoices of the Day Retail Clients

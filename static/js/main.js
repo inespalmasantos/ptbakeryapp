@@ -317,7 +317,7 @@ $(document).ready(function () {
 				contentType: 'application/json',
 				success: function (data) {
 					console.log(data);
-					window.location = '/manage_invoices_private_clients';
+					window.location = '/invoices_private_clients';
 				},
 			})
 		});
@@ -350,7 +350,7 @@ $(document).ready(function () {
 				contentType: 'application/json',
 				success: function (data) {
 					console.log(data);
-					window.location = '/manage_invoices_private_clients';
+					window.location = '/invoices_private_clients';
 				},
 			})
 		});
@@ -382,6 +382,40 @@ $(document).ready(function () {
 	 		});
  		}
 
+ 		function getDeliveryTime() {
+ 			var clientName = $('#client_n').find('select').find(':selected').text();
+ 			$.ajax({
+				type: 'GET',
+				url: '/get_delivery_time',
+				data: {
+					name: clientName
+				},
+				dataType: 'json',
+				success: function (response) {
+					$('#delivery_time').val(response);
+				}
+	 		});
+ 		}
+
+ 		function getPaymentScheme() {
+ 			var clientName = $('#client_n').find('select').find(':selected').text();
+ 			$.ajax({
+				type: 'GET',
+				url: '/get_payment_scheme',
+				data: {
+					name: clientName
+				},
+				dataType: 'json',
+				success: function (response) {
+					$('#payment_scheme').val(response);
+				}
+	 		});
+ 		}
+
+ 		//Get delivery time and payment scheme for default retail client
+ 		getDeliveryTime();
+ 		getPaymentScheme();
+
  		//Set unit_price for default products at Add Invoice View
  		$.each(invoiceRows, function (index, invoiceRow) {
 			getUnitPriceForProduct($(invoiceRow));
@@ -395,11 +429,14 @@ $(document).ready(function () {
 		});
 
 		//Give dynamic behavior unit_prices and amounts when client name is changed at Add Invoice View
+		//Update delivery time and payment scheme
 		$('#client_n').find('select').change(function () {
 			$.each(invoiceRows, function (index, invoiceRow) {
 				getUnitPriceForProduct($(invoiceRow));
 			});
 			getTotalAmount();
+			getDeliveryTime();
+ 			getPaymentScheme();
 		});
 
 		//Give dynamic behavior to amounts when quantity is changed at Add Invoice View
@@ -434,17 +471,20 @@ $(document).ready(function () {
 			$.each(invoiceTable.children('tr'), function (index) {
 				var product = $('#product-' + index).find('select').find(':selected').text();
 				var quantity = $('#quantity-' + index).find('select').find(':selected').text();
-				var returnedQuantity = $('#returned_quantity-' + index).find('select').find(':selected').text();
+				var returnedQuantity = $('#returned-quantity-' + index).find('select').find(':selected').text();
 				var unitPrice = $('#unit_price-' + index).html();
 				var amount = $('#amount-' + index).html();
 				items.push({product, quantity, returnedQuantity, unitPrice, amount});
 			});
 			$.ajax({
 				type: 'POST',
-				url: '/add_invoice_private_clients',
+				url: '/add_invoice_retail_clients',
 				data : JSON.stringify({
 					client_n: formData.client_n,
 					delivery_day: formData.delivery_day,
+					delivery_time: formData.delivery_time,
+					payment_scheme: formData.payment_scheme,
+					other_comments: formData.other_comments,
 					total_amount: totalAmount,
 					items: items
 				}),
@@ -452,7 +492,7 @@ $(document).ready(function () {
 				contentType: 'application/json',
 				success: function (data) {
 					console.log(data);
-					window.location = '/manage_invoices_private_clients';
+					window.location = '/invoices_retail_clients';
 				},
 			})
 		});
@@ -468,16 +508,20 @@ $(document).ready(function () {
 			$.each(invoiceTable.children('tr'), function (index) {
 				var product = $('#product-' + index).find('select').find(':selected').text();
 				var quantity = $('#quantity-' + index).find('select').find(':selected').text();
+				var returnedQuantity = $('#returned-quantity-' + index).find('select').find(':selected').text();
 				var unitPrice = $('#unit_price-' + index).html();
 				var amount = $('#amount-' + index).html();
-				items.push({product, quantity, unitPrice, amount});
+				items.push({product, quantity, returnedQuantity, unitPrice, amount});
 			});
 			$.ajax({
 				type: 'POST',
-				url: '/edit_invoice_private_client/' + invoiceNumber,
+				url: '/edit_invoice_retail_client/' + invoiceNumber,
 				data : JSON.stringify({
-					client_id: formData.client_id,
+					client_n: formData.client_n,
 					delivery_day: formData.delivery_day,
+					delivery_time: formData.delivery_time,
+					payment_scheme: formData.payment_scheme,
+					other_comments: formData.other_comments,
 					total_amount: totalAmount,
 					items: items
 				}),
@@ -485,7 +529,7 @@ $(document).ready(function () {
 				contentType: 'application/json',
 				success: function (data) {
 					console.log(data);
-					window.location = '/manage_invoices_private_clients';
+					window.location = '/invoices_retail_clients';
 				},
 			})
 		});

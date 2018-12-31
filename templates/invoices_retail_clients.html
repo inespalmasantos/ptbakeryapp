@@ -1,68 +1,67 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <div class="container mh-100">
-    <h3 class="pt-3">Invoices <small>>Retail Clients</small></h3>
-    <div class="row pt-4 line1">
-      <div class="col-sm">
-        <a href="/manage_invoices_retail_clients" class="dash-item p-3">
-	      <!--<img src="images/dashboard/clients.png" class="mx-auto d-block dash-img bg-light p-3">-->
-	    <svg class="mx-auto d-block p-3 bg-light dash-img" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="460.298px" height="460.297px" viewBox="0 0 460.298 460.297" style="enable-background:new 0 0 460.298 460.297;"
-	 xml:space="preserve">
-		<path d="M230.149,120.939L65.986,256.274c0,0.191-0.048,0.472-0.144,0.855c-0.094,0.38-0.144,0.656-0.144,0.852v137.041
-			c0,4.948,1.809,9.236,5.426,12.847c3.616,3.613,7.898,5.431,12.847,5.431h109.63V303.664h73.097v109.64h109.629
-			c4.948,0,9.236-1.814,12.847-5.435c3.617-3.607,5.432-7.898,5.432-12.847V257.981c0-0.76-0.104-1.334-0.288-1.707L230.149,120.939
-			z"/>
-		<path d="M457.122,225.438L394.6,173.476V56.989c0-2.663-0.856-4.853-2.574-6.567c-1.704-1.712-3.894-2.568-6.563-2.568h-54.816
-			c-2.666,0-4.855,0.856-6.57,2.568c-1.711,1.714-2.566,3.905-2.566,6.567v55.673l-69.662-58.245
-			c-6.084-4.949-13.318-7.423-21.694-7.423c-8.375,0-15.608,2.474-21.698,7.423L3.172,225.438c-1.903,1.52-2.946,3.566-3.14,6.136
-			c-0.193,2.568,0.472,4.811,1.997,6.713l17.701,21.128c1.525,1.712,3.521,2.759,5.996,3.142c2.285,0.192,4.57-0.476,6.855-1.998
-			L230.149,95.817l197.57,164.741c1.526,1.328,3.521,1.991,5.996,1.991h0.858c2.471-0.376,4.463-1.43,5.996-3.138l17.703-21.125
-			c1.522-1.906,2.189-4.145,1.991-6.716C460.068,229.007,459.021,226.961,457.122,225.438z"/>
-	      <h6 class="text-center text-secondary pt-1">Manage Invoices</h6>
-	    </a>
-	  </div>
-	  <div class="col-sm">
-        <a href="/generate_invoices_day_retail_clients" class="dash-item p-3">
-	      <!--<img src="images/dashboard/clients.png" class="mx-auto d-block dash-img bg-light p-3">-->
-	      <svg class="mx-auto d-block p-3 bg-light dash-img" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 489.4 489.4" style="enable-background:new 0 0 489.4 489.4;" xml:space="preserve">
-		<path d="M347.7,263.75h-66.5c-18.2,0-33,14.8-33,33v51c0,18.2,14.8,33,33,33h66.5c18.2,0,33-14.8,33-33v-51
-			C380.7,278.55,365.9,263.75,347.7,263.75z M356.7,347.75c0,5-4.1,9-9,9h-66.5c-5,0-9-4.1-9-9v-51c0-5,4.1-9,9-9h66.5
-			c5,0,9,4.1,9,9V347.75z"/>
-		<path d="M489.4,171.05c0-2.1-0.5-4.1-1.6-5.9l-72.8-128c-2.1-3.7-6.1-6.1-10.4-6.1H84.7c-4.3,0-8.3,2.3-10.4,6.1l-72.7,128
-			c-1,1.8-1.6,3.8-1.6,5.9c0,28.7,17.3,53.3,42,64.2v211.1c0,6.6,5.4,12,12,12h66.3c0.1,0,0.2,0,0.3,0h93c0.1,0,0.2,0,0.3,0h221.4
-			c6.6,0,12-5.4,12-12v-209.6c0-0.5,0-0.9-0.1-1.3C472,224.55,489.4,199.85,489.4,171.05z M91.7,55.15h305.9l56.9,100.1H34.9
-			L91.7,55.15z M348.3,179.15c-3.8,21.6-22.7,38-45.4,38c-22.7,0-41.6-16.4-45.4-38H348.3z M232,179.15c-3.8,21.6-22.7,38-45.4,38
-			s-41.6-16.4-45.5-38H232z M24.8,179.15h90.9c-3.8,21.6-22.8,38-45.5,38C47.5,217.25,28.6,200.75,24.8,179.15z M201.6,434.35h-69
-			v-129.5c0-9.4,7.6-17.1,17.1-17.1h34.9c9.4,0,17.1,7.6,17.1,17.1v129.5H201.6z M423.3,434.35H225.6v-129.5
-			c0-22.6-18.4-41.1-41.1-41.1h-34.9c-22.6,0-41.1,18.4-41.1,41.1v129.6H66v-193.3c1.4,0.1,2.8,0.1,4.2,0.1
-			c24.2,0,45.6-12.3,58.2-31c12.6,18.7,34,31,58.2,31s45.5-12.3,58.2-31c12.6,18.7,34,31,58.1,31c24.2,0,45.5-12.3,58.1-31
-			c12.6,18.7,34,31,58.2,31c1.4,0,2.7-0.1,4.1-0.1L423.3,434.35L423.3,434.35z M419.2,217.25c-22.7,0-41.6-16.4-45.4-38h90.9
-			C460.8,200.75,441.9,217.25,419.2,217.25z"/>
-	      <h6 class="text-center text-secondary pt-1">Generate Invoices of the Day</h6>
-	  	  </svg>
-	    </a>
-	  </div>
-	  <div class="col-sm">
-        <a href="/convert_invoices_pdf_retail_clients" class="dash-item p-3">
-	      <!--<img src="images/dashboard/clients.png" class="mx-auto d-block dash-img bg-light p-3">-->
-	      <svg class="mx-auto d-block p-3 bg-light dash-img" version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="97.16px" height="97.16px" viewBox="0 0 97.16 97.16" style="enable-background:new 0 0 97.16 97.16;" xml:space="preserve">
-		<path d="M48.58,0C21.793,0,0,21.793,0,48.58s21.793,48.58,48.58,48.58s48.58-21.793,48.58-48.58S75.367,0,48.58,0z M48.58,86.823
-			c-21.087,0-38.244-17.155-38.244-38.243S27.493,10.337,48.58,10.337S86.824,27.492,86.824,48.58S69.667,86.823,48.58,86.823z"/>
-		<path d="M73.898,47.08H52.066V20.83c0-2.209-1.791-4-4-4c-2.209,0-4,1.791-4,4v30.25c0,2.209,1.791,4,4,4h25.832
-			c2.209,0,4-1.791,4-4S76.107,47.08,73.898,47.08z"/>
-		  </svg>
-	      <h6 class="text-center text-secondary pt-1">Convert Invoices to PDF</h6>
-	    </a>
-	  </div>
-    <!--<ul class="list-group">
-      <li class="list-group-item"><a href="/private_clients">Private Clients</a></li>
-      <li class="list-group-item"><a href="/retail_clients">Retail Clients</a></li>
-      <li class="list-group-item"><a href="/delivery_times">Delivery Times</a></li>
-    </ul>-->
-    </div>
-  </div>
+  <h3>Invoices <small>Retail Clients</small></h3>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/invoices">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/add_invoice_retail_clients">Add Invoice</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/generate_invoices_day_retail_clients">Generate Invoices of the Day</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/convert_invoices_pdf_retail_clients">Convert Invoices to PDF</a></button>
+  <div class="table-container">
+  <table class="table table-striped table-sm">
+  <thead>
+    <tr>
+      <th class="align-middle word-wrap">Invoice #</th>
+      <th class="align-middle word-wrap text-center">Client name</th>
+      <th class="align-middle word-wrap text-center">Delivery day</th>
+      <th class="align-middle word-wrap text-center">Delivery time</th>
+      <th class="align-middle word-wrap text-center">Total amount</th>
+      <th class="align-middle word-wrap text-center">Payment scheme	</th>
+      <th class="align-middle word-wrap text-center">Payment status</th>
+      <th class="align-middle word-wrap text-center">Payment date</th>
+      <th class="align-middle word-wrap text-center">Payment method</th>
+      <th class="align-middle word-wrap text-center">Payment details</th>
+      <th class="align-middle word-wrap text-center">Statement issued</th>
+      <th class="align-middle word-wrap text-center">Statement id</th>
+      <th class="align-middle word-wrap text-center">Other info</th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for invoice in invoices|sort(attribute="id") %}
+    <tr>
+      <td class="align-middle word-wrap">{{invoice.id}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.name}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.delivery_day}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.delivery_time}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.total_amount}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_scheme}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_status}}</td>
+      {% if invoice.payment_status=='Not paid' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.payment_date}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{invoice.payment_method}}</td>
+      <td class="align-middle word-wrap text-center">{{invoice.payment_details}}</td>
+      {% if invoice.payment_scheme=='CoD' or invoice.payment_scheme=='TBC' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.statement_issued}}</td>
+      {% endif %}
+      {% if invoice.statement_issued=='No' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{invoice.statement_id}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{invoice.other_info}}</td>
+      <td><a href="edit_invoice_retail_client/{{invoice.id}}">Invoice</a></td>
+      <td><a href="edit_payment_details_retail_client/{{invoice.id}}">Payment</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
+
+  
 {% endblock %}
