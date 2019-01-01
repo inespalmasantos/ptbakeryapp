@@ -56,8 +56,8 @@
         <td class="align-middle word-wrap text-center">{{invoice.statement_id}}</td>
       {% endif %}
       <td class="align-middle word-wrap text-center">{{invoice.other_info}}</td>
-      <td><a href="edit_invoice_retail_client/{{invoice.id}}">Invoice</a></td>
-      <td><a href="edit_payment_details_retail_client/{{invoice.id}}">Payment</a></td>
+      <td class="align-middle word-wrap text-center"><a href="edit_invoice_retail_client/{{invoice.id}}">Invoice</a></td>
+      <td class="align-middle word-wrap text-center"><a href="edit_payment_details_retail_client/{{invoice.id}}">Payment</a></td>
     </tr>
     {% endfor %}
   </tbody>
