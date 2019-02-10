@@ -103,6 +103,35 @@ $(document).ready(function () {
 		document.querySelector('#payment_date').children[1].type = "date";
 		document.querySelector('#payment_date').children[1].required = "date";	
 	}
+
+	if(document.querySelector('#from_date') == null) {
+
+	} else {
+		document.querySelector('#from_date').type = "date";
+		document.querySelector('#from_date').required = "date";
+	}
+
+	if(document.querySelector('#to_date') == null) {
+
+	} else {
+		document.querySelector('#to_date').type = "date";
+		document.querySelector('#to_date').required = "date";
+	}
+
+
+	if(document.querySelector('#statement_delivery_date') == null) {
+
+	} else {
+		document.querySelector('#statement_delivery_date').children[1].type = "date";
+		document.querySelector('#statement_delivery_date').children[1].required = "date";
+	}
+
+	if(document.querySelector('#receipt_delivery_date') == null) {
+
+	} else {
+		document.querySelector('#receipt_delivery_date').children[1].type = "date";
+		document.querySelector('#receipt_delivery_date').children[1].required = "date";
+	}
 	
 
 	if(paymentStatus === 'Paid') {
@@ -121,7 +150,7 @@ $(document).ready(function () {
 		$('#statement_issued').hide();
 	}
 
-	if(statementIssued === 'Yes') {
+	if(statementIssued === 'Yes' || document.querySelector('#statement_issued') == null) {
 		$('#statement_id').show();
 	} else {
 		$('#statement_id').hide();
@@ -148,6 +177,39 @@ $(document).ready(function () {
 		    $('#statement_issued').hide();
 	    }
 	});
+
+	//Give dynamic behavior to statement_delivery_date on Edit Payment Details Statement Retail Client Views
+	var statementDelivered = $('#statement_delivered').find(':selected').text();
+	if(statementDelivered === 'Yes') {
+		$('#statement_delivery_date').show();
+	} else {
+		$('#statement_delivery_date').hide();
+	}
+	$('#statement_delivered').find('select').change(function() {
+		var valStatementDelivered = $('#statement_delivered').find(':selected').text();
+		if(valStatementDelivered === 'Yes') {
+		    $('#statement_delivery_date').show();
+		} else {
+		    $('#statement_delivery_date').hide();
+		}
+	});
+
+	//Give dynamic behavior to receipt_delivery_date on Edit Payment Details Statement Retail Client Views
+	var receiptDelivered = $('#receipt_delivered').find(':selected').text();
+	if(receiptDelivered === 'Yes') {
+		$('#receipt_delivery_date').show();
+	} else {
+		$('#receipt_delivery_date').hide();
+	}
+	$('#receipt_delivered').find('select').change(function() {
+		var valReceiptDelivered = $('#receipt_delivered').find(':selected').text();
+		if(valReceiptDelivered === 'Yes') {
+		    $('#receipt_delivery_date').show();
+		} else {
+		    $('#receipt_delivery_date').hide();
+		}
+	});
+	
 
 
     //Add lines to Add Invoice View

@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+  <h3>Edit Statement Payment Details <small>Retail Client</small></h3>
+  {% from "includes/_formhelpers.html" import render_field %}
+  <form method="POST" action="">
+  	<div class="form-group">
+  		<div id='statement_id'>
+        {{render_field(form.statement_id, class_="form-control form-control-sm", disabled=True)}}
+      </div>
+      {{render_field(form.client_n, class_="form-control form-control-sm", disabled=True)}}
+      {{render_field(form.from_date, class_="form-control form-control-sm", disabled=True)}}
+      {{render_field(form.to_date, class_="form-control form-control-sm", disabled=True)}}
+      {{render_field(form.total_amount, class_="form-control form-control-sm", disabled=True)}}
+      {{render_field(form.statement_delivery_method, class_="form-control form-control-sm")}}
+      <div id='statement_delivered'>
+        {{render_field(form.statement_delivered, class_="form-control form-control-sm")}}
+      </div>
+      <div id='statement_delivery_date'>
+      {{render_field(form.statement_delivery_date, class_="form-control form-control-sm")}}
+      </div>
+      <div id='payment_status'>
+        {{render_field(form.payment_status, class_="form-control form-control-sm")}}
+      </div>
+      <div id='payment_date'>
+        {{render_field(form.payment_date, class_="form-control form-control-sm")}}
+      </div>
+      <div id='payment_method'>
+        {{render_field(form.payment_method, class_="form-control form-control-sm")}}
+      </div>
+      <div id='payment_details'>
+        {{render_field(form.payment_details, class_="form-control form-control-sm")}}
+      </div>
+      <div id='receipt_delivered'>
+        {{render_field(form.receipt_delivered, class_="form-control form-control-sm")}}
+      </div>
+      <div id='receipt_delivery_date'>
+        {{render_field(form.receipt_delivery_date, class_="form-control form-control-sm")}}
+      </div>
+      {{render_field(form.other_info, class_="form-control form-control-sm")}}
+    </div>
+  	<button type="submit" class="btn float-right mb-2 pt-1 pb-1 pl-2 pr-2 float-right" value="Submit"><a>Save Changes</a></button>
+    <button class="btn float-right mr-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/statements_receipts">Discard Changes</a></button>
+  </form>
+{% endblock %}

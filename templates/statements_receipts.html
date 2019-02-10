@@ -1,6 +1,68 @@
 {% extends 'layout.html' %}
 
 {% block body %}
-  <h3>Statements & Receipts</h3>
-  
+  <h3 class="float-left pt-1">Statements & Receipts</h3>
+  <button class="btn float-right mt-1 mb-2 pt-1 pb-1 pl-2 pr-2"><a href="/dashboard">Back</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/generate_statements">Generate Statements</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/convert_statements_pdf">Convert Statements to PDF</a></button>
+  <button class="btn float-right mt-1 mb-2 mr-2 pt-1 pb-1 pl-2 pr-2"><a href="/convert_receipts_pdf">Convert Receipts to PDF</a></button>
+  <div class="table-container">
+  <table class="table table-striped table-sm">
+  <thead>
+    <tr>
+      <th class="align-middle word-wrap">Statement nr</th>
+      <th class="align-middle word-wrap text-center">Client name</th>
+      <th class="align-middle word-wrap text-center">From date</th>
+      <th class="align-middle word-wrap text-center">To date</th>
+      <th class="align-middle word-wrap text-center">Total amount</th>
+      <th class="align-middle word-wrap text-center">Statement delivery method</th>
+      <th class="align-middle word-wrap text-center">Statement delivered</th>
+      <th class="align-middle word-wrap text-center">Statement delivery date</th>
+      <th class="align-middle word-wrap text-center">Payment status</th>
+      <th class="align-middle word-wrap text-center">Payment date</th>
+      <th class="align-middle word-wrap text-center">Payment method</th>
+      <th class="align-middle word-wrap text-center">Payment details</th>
+      <th class="align-middle word-wrap text-center">Receipt delivered</th>
+      <th class="align-middle word-wrap text-center">Receipt delivery date</th>
+      <th class="align-middle word-wrap text-center">Other info</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for statement in statements|sort(attribute="id") %}
+    <tr>
+      <td class="align-middle word-wrap">{{statement.statement_id}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.name}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.from_date}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.to_date}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.statement_total_amount}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.statement_delivery_method}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.statement_delivered}}</td>
+      {% if statement.statement_delivered=='No' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{statement.statement_delivery_date}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{statement.payment_status}}</td>
+      {% if statement.payment_status=='Not paid' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{statement.payment_date}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{statement.payment_method}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.payment_details}}</td>
+      <td class="align-middle word-wrap text-center">{{statement.receipt_delivered}}</td>
+      {% if statement.receipt_delivered=='No' %}
+        <td class="align-middle word-wrap text-center"></td>
+      {% else %}
+        <td class="align-middle word-wrap text-center">{{statement.receipt_delivery_date}}</td>
+      {% endif %}
+      <td class="align-middle word-wrap text-center">{{statement.other_info}}</td>
+      <td class="align-middle word-wrap text-center"><a href="statement_detail/{{statement.statement_id}}">Statement</a></td>
+      <td class="align-middle word-wrap text-center"><a href="edit_payment_details_statement_retail_client/{{statement.statement_id}}">Payment</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  </table>
 {% endblock %}

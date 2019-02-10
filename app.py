@@ -1596,7 +1596,155 @@ def convert_invoices_pdf_retail_clients():
 @app.route('/statements_receipts')
 @is_logged_in
 def statements_receipts():
-	return render_template('statements_receipts.html')
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get Statements
+	result = cur.execute("SELECT * FROM statements INNER JOIN invoices ON statements.statement_id = invoices.statement_id INNER JOIN clients ON invoices.client_id = clients.id GROUP BY statements.statement_id")
+
+	statements = cur.fetchall()
+
+	if result > 0:
+		return render_template('statements_receipts.html', statements=statements)
+	else:
+		msg = 'No Statements Found'
+		return render_template('statements_receipts.html', msg=msg)
+
+	# Close connection
+	cur.close()
+	
+# Retail Client Statement Form Class
+class RetailClientStatementForm(Form):
+	statement_id = IntegerField('Statement id')
+	client_n = StringField('Client name')
+	from_date = DateField('From date', format='%Y-%m-%d')
+	to_date = DateField('To date', format='%Y-%m-%d')
+	total_amount = DecimalField('Total amount', places=2, rounding=None)
+	statement_delivery_method = SelectField('Statement delivery method', choices=[('By email', 'By email'), ('By wechat', 'By wechat'), ('By hand', 'By hand')])
+	statement_delivered = SelectField('Statement delivered', choices=[('Yes', 'Yes'), ('No', 'No')])
+	statement_delivery_date = DateField('Statement delivery date', format='%Y-%m-%d')
+	payment_status = SelectField('Payment status', choices=[('Not paid', 'Not paid'), ('Paid', 'Paid')])
+	payment_date = DateField('Payment date', format='%Y-%m-%d')
+	payment_method = SelectField('Payment method', choices=[('Bank transfer', 'Bank transfer'), ('Cash', 'Cash')])
+	payment_details = StringField('Payment details', [validators.Length(max=255)])
+	receipt_delivered = SelectField('Receipt delivered', choices=[('Yes', 'Yes'), ('No', 'No')])
+	receipt_delivery_date = DateField('Receipt delivery date', format='%Y-%m-%d')
+	other_info = StringField('Other info', [validators.Length(max=255)])
+		
+# Edit Payment Details Statement Retail Client
+@app.route('/edit_payment_details_statement_retail_client/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def edit_payment_details_statement_retail_client(id):
+	# Create Cursor
+	cur = mysql.connection.cursor()
+
+	# Get statement by id
+	result = cur.execute("SELECT * FROM statements INNER JOIN invoices ON statements.statement_id = invoices.statement_id INNER JOIN clients ON invoices.client_id = clients.id WHERE statements.statement_id = %s GROUP BY statements.statement_id", [id])
+	statement = cur.fetchone()
+
+	# Get form 
+	form = RetailClientStatementForm(request.form)
+	form.statement_id.data = statement['statement_id']
+	form.client_n.data = statement['name']
+	form.from_date.data = statement['from_date']
+	form.to_date.data = statement['to_date']
+	form.total_amount.data = statement['statement_total_amount']
+	form.statement_delivery_method.data = statement['statement_delivery_method']
+	form.statement_delivered.data = statement['statement_delivered']
+	form.statement_delivery_date.data = statement['statement_delivery_date']
+	form.payment_status.data = statement['payment_status']
+	if form.payment_status.data == 'Paid':
+		form.payment_date.data = statement['payment_date']
+		form.payment_method.data = statement['payment_method']
+		form.payment_details.data = statement['payment_details']
+		form.receipt_delivered.data = statement['receipt_delivered']
+		form.receipt_delivery_date.data = statement['receipt_delivery_date']
+	else:
+		form.payment_date.data = statement['payment_date']
+		form.payment_method.data = 'Bank transfer'
+		form.payment_details.data = ''
+		form.receipt_delivered.data = 'No'
+		form.receipt_delivery_date.data = statement['receipt_delivery_date'] 
+	form.other_info.data = statement['other_info']
+	
+
+	if request.method == 'POST' and form.validate():
+		statement_delivery_method = request.form['statement_delivery_method']
+		statement_delivered = request.form['statement_delivered']
+		if statement_delivered == 'Yes':
+			statement_delivery_date = request.form['statement_delivery_date']
+		else:
+			#Ficticious statement_delivery_date to avoid eliminating the form.validate() function
+			statement_delivery_date = '2000-01-01'
+		payment_status = request.form['payment_status']
+		if payment_status == 'Paid':
+			payment_date = request.form['payment_date']
+			payment_method = request.form['payment_method']
+			payment_details = request.form['payment_details']
+		else:
+			#Ficticious payment_date to avoid eliminating the form.validate() function
+			payment_date = '2000-01-01'
+			payment_method = ''
+			payment_details = ''
+		receipt_delivered = request.form['receipt_delivered']
+		if receipt_delivered == 'Yes':
+			receipt_delivery_date = request.form['receipt_delivery_date']
+		else:
+			#Ficticious receipt_delivery_date to avoid eliminating the form.validate() function
+			receipt_delivery_date = '2000-01-01'
+		other_info = request.form['other_info']
+
+		
+		# Create Cursor
+		cur = mysql.connection.cursor()
+
+		# Execute
+		cur.execute("UPDATE statements SET statement_delivery_method=%s, statement_delivered=%s, statement_delivery_date=%s, payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, receipt_delivered=%s, receipt_delivery_date=%s, other_info=%s WHERE statement_id=%s", (statement_delivery_method, statement_delivered, statement_delivery_date, payment_status, payment_date, payment_method, payment_details, receipt_delivered, receipt_delivery_date, other_info, id))
+        		
+		# Commit to DB
+		mysql.connection.commit()
+
+		# Close connection
+		cur.close()
+
+		flash('Payment Details Updated', 'success')
+
+		return redirect(url_for('statements_receipts'))
+		
+	else:
+		print(form.errors)
+	return render_template('edit_payment_details_statement_retail_client.html', form=form)
+
+
+# Statement Detail
+@app.route('/statement_detail/<string:id>', methods=['GET', 'POST'])
+@is_logged_in
+def statement_detail(id):
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get statement by id
+	result = cur.execute("SELECT * FROM statements INNER JOIN invoices ON statements.statement_id = invoices.statement_id INNER JOIN clients ON invoices.client_id = clients.id WHERE statements.statement_id = %s GROUP BY statements.statement_id", [id])
+	statement = cur.fetchone()
+
+	# Get form 
+	form = RetailClientStatementForm(request.form)
+	form.statement_id.data = statement['statement_id']
+	form.client_n.data = statement['name']
+	form.from_date.data = statement['from_date']
+	form.to_date.data = statement['to_date']
+	form.total_amount.data = statement['statement_total_amount']
+
+	# Get Invoices
+	result = cur.execute("SELECT * FROM invoices WHERE statement_id=%s", [statement['statement_id']])
+	invoices = cur.fetchall()
+
+	return render_template('statement_detail.html', form=form, invoices=invoices)
+
+	# Close connection
+	cur.close()
+
+
 
 # Bakery & Pastry Reports
 @app.route('/bakery_pastry_reports')
