@@ -17,11 +17,7 @@
       <th class="align-middle word-wrap text-center">Total amount</th>
       <th class="align-middle word-wrap text-center">Payment scheme	</th>
       <th class="align-middle word-wrap text-center">Payment status</th>
-      <th class="align-middle word-wrap text-center">Payment date</th>
-      <th class="align-middle word-wrap text-center">Payment method</th>
-      <th class="align-middle word-wrap text-center">Payment details</th>
       <th class="align-middle word-wrap text-center">Statement issued</th>
-      <th class="align-middle word-wrap text-center">Statement id</th>
       <th class="align-middle word-wrap text-center">Other info</th>
       <th></th>
       <th></th>
@@ -37,22 +33,10 @@
       <td class="align-middle word-wrap text-center">{{invoice.total_amount}}</td>
       <td class="align-middle word-wrap text-center">{{invoice.payment_scheme}}</td>
       <td class="align-middle word-wrap text-center">{{invoice.payment_status}}</td>
-      {% if invoice.payment_status=='Not paid' %}
-        <td class="align-middle word-wrap text-center"></td>
-      {% else %}
-        <td class="align-middle word-wrap text-center">{{invoice.payment_date}}</td>
-      {% endif %}
-      <td class="align-middle word-wrap text-center">{{invoice.payment_method}}</td>
-      <td class="align-middle word-wrap text-center">{{invoice.payment_details}}</td>
       {% if invoice.payment_scheme=='CoD' or invoice.payment_scheme=='TBC' %}
         <td class="align-middle word-wrap text-center"></td>
       {% else %}
         <td class="align-middle word-wrap text-center">{{invoice.statement_issued}}</td>
-      {% endif %}
-      {% if invoice.statement_issued=='No' %}
-        <td class="align-middle word-wrap text-center"></td>
-      {% else %}
-        <td class="align-middle word-wrap text-center">{{invoice.statement_id}}</td>
       {% endif %}
       <td class="align-middle word-wrap text-center">{{invoice.other_info}}</td>
       <td class="align-middle word-wrap text-center"><a href="edit_invoice_retail_client/{{invoice.id}}">Invoice</a></td>

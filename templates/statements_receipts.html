@@ -17,13 +17,8 @@
       <th class="align-middle word-wrap text-center">Total amount</th>
       <th class="align-middle word-wrap text-center">Statement delivery method</th>
       <th class="align-middle word-wrap text-center">Statement delivered</th>
-      <th class="align-middle word-wrap text-center">Statement delivery date</th>
       <th class="align-middle word-wrap text-center">Payment status</th>
-      <th class="align-middle word-wrap text-center">Payment date</th>
-      <th class="align-middle word-wrap text-center">Payment method</th>
-      <th class="align-middle word-wrap text-center">Payment details</th>
       <th class="align-middle word-wrap text-center">Receipt delivered</th>
-      <th class="align-middle word-wrap text-center">Receipt delivery date</th>
       <th class="align-middle word-wrap text-center">Other info</th>
       <th></th>
       <th></th>
@@ -39,25 +34,8 @@
       <td class="align-middle word-wrap text-center">{{statement.statement_total_amount}}</td>
       <td class="align-middle word-wrap text-center">{{statement.statement_delivery_method}}</td>
       <td class="align-middle word-wrap text-center">{{statement.statement_delivered}}</td>
-      {% if statement.statement_delivered=='No' %}
-        <td class="align-middle word-wrap text-center"></td>
-      {% else %}
-        <td class="align-middle word-wrap text-center">{{statement.statement_delivery_date}}</td>
-      {% endif %}
       <td class="align-middle word-wrap text-center">{{statement.payment_status}}</td>
-      {% if statement.payment_status=='Not paid' %}
-        <td class="align-middle word-wrap text-center"></td>
-      {% else %}
-        <td class="align-middle word-wrap text-center">{{statement.payment_date}}</td>
-      {% endif %}
-      <td class="align-middle word-wrap text-center">{{statement.payment_method}}</td>
-      <td class="align-middle word-wrap text-center">{{statement.payment_details}}</td>
       <td class="align-middle word-wrap text-center">{{statement.receipt_delivered}}</td>
-      {% if statement.receipt_delivered=='No' %}
-        <td class="align-middle word-wrap text-center"></td>
-      {% else %}
-        <td class="align-middle word-wrap text-center">{{statement.receipt_delivery_date}}</td>
-      {% endif %}
       <td class="align-middle word-wrap text-center">{{statement.other_info}}</td>
       <td class="align-middle word-wrap text-center"><a href="statement_detail/{{statement.statement_id}}">Statement</a></td>
       <td class="align-middle word-wrap text-center"><a href="edit_payment_details_statement_retail_client/{{statement.statement_id}}">Payment</a></td>
