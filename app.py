@@ -1698,9 +1698,12 @@ def edit_payment_details_statement_retail_client(id):
 		# Create Cursor
 		cur = mysql.connection.cursor()
 
-		# Execute
+		# Execute - update statement payment information
 		cur.execute("UPDATE statements SET statement_delivery_method=%s, statement_delivered=%s, statement_delivery_date=%s, payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s, receipt_delivered=%s, receipt_delivery_date=%s, other_info=%s WHERE statement_id=%s", (statement_delivery_method, statement_delivered, statement_delivery_date, payment_status, payment_date, payment_method, payment_details, receipt_delivered, receipt_delivery_date, other_info, id))
         		
+		# Execute - update correspondent invoices payment information
+		cur.execute("UPDATE invoices SET payment_status=%s, payment_date=%s, payment_method=%s, payment_details=%s WHERE statement_id=%s", (payment_status, payment_date, payment_method, payment_details, id))
+
 		# Commit to DB
 		mysql.connection.commit()
 
