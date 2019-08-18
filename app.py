@@ -1807,7 +1807,27 @@ def bakery_pastry_reports():
 @app.route('/drivers_info')
 @is_logged_in
 def drivers_info():
-	return render_template('drivers_info.html')
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get Drivers Info for Home Delivery
+	result = cur.execute("""SELECT zone, clients.id AS client_id, address, door_code
+							FROM invoices
+							JOIN clients ON clients.id = invoices.client_id
+							WHERE clients.type = 'private'
+							AND invoices.delivery_day = '2018-12-31'""")
+
+
+	deliveries = cur.fetchall()
+
+	if result > 0:
+		return render_template('drivers_info.html', deliveries=deliveries)
+	else:
+		msg = 'No Deliveries Found'
+		return render_template('drivers_info.html', msg=msg)
+
+	# Close connection
+	cur.close()
 
 # Data Backup
 @app.route('/data_backup')
