@@ -1753,7 +1753,55 @@ def statement_detail(id):
 @app.route('/bakery_pastry_reports')
 @is_logged_in
 def bakery_pastry_reports():
-	return render_template('bakery_pastry_reports.html')
+	# Create cursor
+	cur = mysql.connection.cursor()
+
+	# Get Bakery and Pastry Report
+	result = cur.execute("""SELECT product_description
+								 , SUM(quantity_ordered*nr_pieces_per_bag) AS total
+								 , COALESCE((SELECT SUM(quantity_ordered*nr_pieces_per_bag)
+										 	 FROM ordered_items
+										 	 JOIN products ON products.name = ordered_items.product_description
+											 JOIN invoices ON invoices.id = ordered_items.invoice_id
+											 JOIN clients ON clients.id = invoices.client_id
+											 WHERE delivery_day = '2018-12-31'
+											 AND product_description = oi.product_description
+											 AND clients.type = 'private'), 0 ) AS home_delivery
+								 , COALESCE((SELECT SUM(quantity_ordered*nr_pieces_per_bag)
+										 	 FROM ordered_items
+										 	 JOIN products ON products.name = ordered_items.product_description
+											 JOIN invoices ON invoices.id = ordered_items.invoice_id
+											 JOIN clients ON clients.id = invoices.client_id
+											 WHERE delivery_day = '2018-12-31'
+											 AND product_description = oi.product_description
+											 AND clients.type = 'retail'
+											 AND retail_type = 'supermarket'), 0) AS supermarket
+								 , COALESCE((SELECT SUM(quantity_ordered*nr_pieces_per_bag)
+										 	 FROM ordered_items
+										 	 JOIN products ON products.name = ordered_items.product_description
+											 JOIN invoices ON invoices.id = ordered_items.invoice_id
+											 JOIN clients ON clients.id = invoices.client_id
+											 WHERE delivery_day = '2018-12-31'
+											 AND product_description = oi.product_description
+											 AND clients.type = 'retail'
+											 AND retail_type = 'restaurant'), 0) AS restaurant
+								 , product_type
+							FROM ordered_items AS oi
+							JOIN products ON products.name = oi.product_description
+							JOIN invoices ON invoices.id = oi.invoice_id
+							WHERE delivery_day = '2018-12-31'
+							GROUP BY product_description""")
+
+	products = cur.fetchall()
+
+	if result > 0:
+		return render_template('bakery_pastry_reports.html', products=products)
+	else:
+		msg = 'No Products Found'
+		return render_template('bakery_pastry_reports.html', msg=msg)
+
+	# Close connection
+	cur.close()
 
 # Divers Info
 @app.route('/drivers_info')
